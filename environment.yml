@@ -1,4 +1,4 @@
-name: SEAK-clim
+name: SEAK-impacts
 channels:
   - conda-forge
   - defaults  
