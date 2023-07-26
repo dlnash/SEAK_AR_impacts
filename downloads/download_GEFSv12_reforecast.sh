@@ -33,6 +33,10 @@ hgt_pres ## Z below 700 mb
 hgt_pres_abv700mb ## Z above 700 mb
 )
 
+# set up out path
+PATH_TO_OUT='/cw3e/mead/projects/cwp140/scratch/dnash/data/downloads/GEFSv12_reforecast/${ARID}/'
+mkdir ${PATH_TO_OUT}
+
 ## outer loop - loop through start date to end date
 for i in ${!datelst[*]}
 do 
@@ -40,8 +44,6 @@ do
     
     ### Set up paths
     PATH_TO_DATA='s3://noaa-gefs-retrospective/GEFSv12/reforecast/${YR}/${IN_DATE}00/c00/Days:1-10/'
-    PATH_TO_OUT='/cw3e/mead/projects/cwp140/scratch/dnash/data/downloads/GEFSv12_reforecast/${ARID}/'
-    mkdir ${PATH_TO_OUT}
 
     ## inner loop - loop through variables
     
