@@ -21,21 +21,21 @@ ARID="201508151811" # AR track ID
 ### Variables to download:
 var_array=(
 apcp_sfc ## Total Precipitation 
-# ugrd_pres ## U below 700 mb
-# ugrd_pres_abv700mb ## U above 700 mb
-# vgrd_pres ## V below 700 mb
-# vgrd_pres_abv700mb ## V above 700 mb
-# tmp_pres ## T below 700 mb
-# tmp_pres_abv700mb ## T above 700 mb
-# spfh_pres ## Q below 700 mb
-# spfh_pres_abv700mb ## Q above 700 mb
-# hgt_pres ## Z below 700 mb
-# hgt_pres_abv700mb ## Z above 700 mb
+ugrd_pres ## U below 700 mb
+ugrd_pres_abv700mb ## U above 700 mb
+vgrd_pres ## V below 700 mb
+vgrd_pres_abv700mb ## V above 700 mb
+tmp_pres ## T below 700 mb
+tmp_pres_abv700mb ## T above 700 mb
+spfh_pres ## Q below 700 mb
+spfh_pres_abv700mb ## Q above 700 mb
+hgt_pres ## Z below 700 mb
+hgt_pres_abv700mb ## Z above 700 mb
 )
 
 # set up out path
 PATH_TO_OUT="/cw3e/mead/projects/cwp140/scratch/dnash/data/downloads/GEFSv12_reforecast/${ARID}/"
-mkdir ${PATH_TO_OUT}
+mkdir -p ${PATH_TO_OUT}
 
 ## outer loop - loop through start date to end date
 for i in ${!datelst[*]}
