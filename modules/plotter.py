@@ -76,6 +76,9 @@ def draw_basemap(ax, datacrs=ccrs.PlateCarree(), extent=None, xticks=None, ytick
         ax.set_global()
         extent = [-180., 180., -90., 90.]
     # If extent is given, set map extent to lat/lon bounding box
+    elif extent[0] > extent[1]:
+        extent = [extent[0]%360, extent[1]%360, extent[2], extent[3]]
+        ax.set_extent(extent, crs=datacrs)
     else:
         ax.set_extent(extent, crs=datacrs)
     
