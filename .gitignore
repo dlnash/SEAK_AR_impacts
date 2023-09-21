@@ -8,4 +8,4 @@
 
 ## ignore data folder
 /figs/*
-/data/*
+/out/*

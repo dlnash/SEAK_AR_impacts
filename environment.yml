@@ -23,5 +23,8 @@ dependencies:
   - odc-geo
   - cfgrib
   - wrf-python
+  - pyviz 
+  - holoviews 
+  - bokeh
 
 

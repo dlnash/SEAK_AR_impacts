@@ -74,6 +74,8 @@ def process_GEFSv12_prec(ARID, start_date, end_date):
     
     return out_fname
 
+
+## run one at a time
 # results = []
 # for index, row in duration_df.iterrows():
 #     z = process_GEFSv12_prec(row)
