@@ -6,14 +6,16 @@
 #
 ######################################################################
 
+
 ## import libraries
 import os, sys
+import yaml
 import subprocess
 import numpy as np
 import pandas as pd
+import xarray as xr
 from datetime import timedelta
-# import dask
-from dask.distributed import progress # this gives us a nice progress bar
+
 path_to_repo = '/cw3e/mead/projects/cwp140/scratch/dnash/repos/SEAK_AR_impacts/'
 sys.path.append(path_to_repo+'modules')
 import GEFSv12_funcs as gefs
@@ -23,21 +25,14 @@ path_to_out  = path_to_repo + 'out/'       # output files (numerical results, in
 path_to_figs = path_to_repo +'figs/'      # figures
 path_to_data = '/cw3e/mead/projects/cwp140/scratch/dnash/data/'      # project data -- read only
 
-## pull filenames from preprocessed directory into a list of trackIDs
-complete_trackID = gefs.list_of_processed_trackIDs('prec')
+config_file = str(sys.argv[1]) # this is the config file name
+job_info = str(sys.argv[2]) # this is the job name
 
-## read AR duration file
-duration_df = pd.read_csv(path_to_out + 'AR_track_duration_SEAK.csv')
-duration_df['start_date'] = pd.to_datetime(duration_df['start_date'])
-duration_df['end_date'] = pd.to_datetime(duration_df['end_date'])
-duration_df.index = duration_df['start_date']
-## keep only rows where we haven't preprocessed the dates yet
-idx = ~duration_df['trackID'].isin(complete_trackID)
-duration_df = duration_df[idx]
-ARIDs = duration_df['trackID']
-start_dates = duration_df['start_date']
-end_dates = duration_df['end_date']
-
+config = yaml.load(open(config_file), Loader=yaml.SafeLoader) # read the file
+job = config[job_info] # pull the job info from the dict
+ARID = job['trackID']
+start_date = pd.to_datetime(job['start_date'])
+end_date = pd.to_datetime(job['end_date'])
 
 def process_GEFSv12_prec(ARID, start_date, end_date):
     print('Processing .... AR ID {0}'.format(ARID))
@@ -74,14 +69,4 @@ def process_GEFSv12_prec(ARID, start_date, end_date):
     
     return out_fname
 
-
-## run one at a time
-# results = []
-# for index, row in duration_df.iterrows():
-#     z = process_GEFSv12_prec(row)
-#     results.append(z)
-
-# dask.compute(results)
-client = sys.argv[1]
-futures = client.map(process_GEFSv12_prec, ARIDs, start_dates, end_dates)
-progress(futures) # this will show us progress of our function running over time
+process_GEFSv12_prec(ARID, start_date, end_date)
