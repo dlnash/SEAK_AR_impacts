@@ -68,7 +68,7 @@ do
         INPUT_FNAME="${PATH_TO_DATA}${VAR_NAME}_${IN_DATE}00_c00.grib2"
         OUTPUT_FNAME="${PATH_TO_OUT}${VAR_NAME}_${IN_DATE}00_c00.grib2"
         # echo ${OUTPUT_FNAME}
-        /cw3e/mead/projects/cwp140/scratch/dnash/aws/local/bin/aws s3 cp ${INPUT_FNAME} ${OUTPUT_FNAME} --no-sign-request
+        /cw3e/mead/projects/cwp140/scratch/dnash/aws/local/bin/aws s3 cp --region us-east-1 ${INPUT_FNAME} ${OUTPUT_FNAME} --no-sign-request
     
     done
 

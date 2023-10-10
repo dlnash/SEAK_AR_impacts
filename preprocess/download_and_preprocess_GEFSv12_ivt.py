@@ -31,6 +31,7 @@ config = yaml.load(open(config_file), Loader=yaml.SafeLoader) # read the file
 job = config[job_info] # pull the job info from the dict
 ARID = job['trackID']
 start_date = pd.to_datetime(job['start_date'])
+end_date = pd.to_datetime(job['end_date'])
 
 def process_GEFSv12_ivt(ARID, start_date, end_date):
     print('Processing .... AR ID {0}'.format(ARID))

@@ -2,14 +2,15 @@
 #SBATCH --account=cwp140
 #SBATCH --partition=shared
 #SBATCH -N 1 # Ensure that all cores are on one machine
+#SBATCH --nodes=1 # specifies how many nodes to use (each node has 24 cores)
 #SBATCH --mem=40G
-#SBATCH -t 05:00:00 # Runtime in HH:MM:SS
+#SBATCH -t 24:00:00 # Runtime in HH:MM:SS
 #SBATCH -o slurm_out/ivt/output_%a # File to which STDOUT will be written
 #SBATCH -e slurm_out/ivt/output_err%a # File to which STDERR will be written
 #SBATCH --job-name=preprocess_GEFS_ivt
 #SBATCH --mail-type=ALL # Type of email notification- BEGIN,END,FAIL,ALL
 #SBATCH --mail-user=dnash@ucsd.edu # Email to which notifications will be sent
-#SBATCH --array=1-12%12 # runs jobs 39-1499, 100 at a time
+#SBATCH --array=13-1467%100 # runs jobs 39-1499, 100 at a time
 
 # Activate Anaconda work environment
 source /home/${USER}/.bashrc

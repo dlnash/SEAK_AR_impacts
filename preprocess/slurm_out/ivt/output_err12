@@ -1,5 +1,0 @@
-Traceback (most recent call last):
-  File "/cw3e/mead/projects/cwp140/scratch/dnash/repos/SEAK_AR_impacts/preprocess/download_and_preprocess_GEFSv12_ivt.py", line 79, in <module>
-    process_GEFSv12_ivt(ARID, start_date, end_date)
-                                          ^^^^^^^^
-NameError: name 'end_date' is not defined

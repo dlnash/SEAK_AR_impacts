@@ -9,3 +9,4 @@
 ## ignore data folder
 /figs/*
 /out/*
+/preprocess/slurm_out/*

@@ -2,6 +2,7 @@
 #SBATCH --account=cwp140
 #SBATCH --partition=compute
 #SBATCH -N 1 # Ensure that all cores are on one machine
+#SBATCH --nodes=1 # specifies how many nodes to use (each node has 24 cores)
 #SBATCH --mem=40G
 #SBATCH -t 05:00:00 # Runtime in HH:MM:SS
 #SBATCH -o slurm_out/prec/output_%a # File to which STDOUT will be written
