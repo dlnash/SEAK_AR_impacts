@@ -10,7 +10,7 @@
 #SBATCH --job-name=preprocess_GEFS_freezing_level
 #SBATCH --mail-type=ALL # Type of email notification- BEGIN,END,FAIL,ALL
 #SBATCH --mail-user=dnash@ucsd.edu # Email to which notifications will be sent
-#SBATCH --array=539-738%100 # runs jobs 39-1499, 100 at a time
+#SBATCH --array=739-882%100 # runs jobs 39-1499, 100 at a time
 
 # Activate Anaconda work environment
 source /home/${USER}/.bashrc
