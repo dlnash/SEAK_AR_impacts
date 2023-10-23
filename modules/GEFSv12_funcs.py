@@ -14,13 +14,18 @@ import wrf
 import glob
 import re
 
-def list_of_processed_trackIDs(varname):
+def list_of_processed_trackIDs(varname, server):
     '''
     Returns a list of AR trackIDs that have been processed
     '''
     processed_trackIDs = []
-
-    list_of_files = glob.glob('/cw3e/mead/projects/cwp140/scratch/dnash/data/preprocessed/GEFSv12_reforecast/{0}/*_{0}.nc'.format(varname))
+    if server == 'Comet':
+        list_of_files = glob.glob('/cw3e/mead/projects/cwp140/scratch/dnash/data/preprocessed/GEFSv12_reforecast/{0}/*_{0}.nc'.format(varname))
+    elif server == 'Skyriver':
+        list_of_files = glob.glob('/data/projects/Comet/cwp140/preprocessed/GEFSv12_reforecast/{0}/*_{0}.nc'.format(varname))
+    else:
+        print('Not ready for Expanse')
+    
     for fname in list_of_files:
 
         # pull the initialization date from the filename

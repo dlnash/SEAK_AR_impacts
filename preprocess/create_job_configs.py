@@ -15,7 +15,7 @@ import GEFSv12_funcs as gefs
 
 def create_job_config_file(varname):
     ## pull filenames from preprocessed directory into a list of trackIDs
-    complete_trackID = gefs.list_of_processed_trackIDs(varname)
+    complete_trackID = gefs.list_of_processed_trackIDs(varname, 'Skyriver') ## may need to update the server name
     
     ## read AR duration file
     duration_df = pd.read_csv('../out/AR_track_duration_SEAK.csv')
