@@ -4,9 +4,9 @@
 
 Navigate to [https://dataverse.ucla.edu/dataverse/ar](https://dataverse.ucla.edu/dataverse/ar) and select 'globalARcatalog_NCEP-NCAR_1948-2021_v3.0.nc' to download. You will need to provide information regarding the use of this dataset.
 
-2. Download Mesowest precipitation gauge data
+2. Download ASOS/COOP precipitation gauge data from Mesowest.
 
-TODO: Add framework for downloading and cleaning Mesowest Station Data
+ASOS/COOP precipitation gauge data from 2002 is available at [https://mesowest.utah.edu/](https://mesowest.utah.edu/). 
 
 3. Download the Global Ensemble Forecast System Version 12: Reforecast Data
 
