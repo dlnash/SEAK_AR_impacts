@@ -41,6 +41,19 @@ def preprocess(ds):
     '''keep only the first 24 hours'''
     return ds.isel(step=slice(0, 8))
 
+def fix_GEFSv12_open_mfdataset(fname):
+    list_of_files = glob.glob(fname)
+    ds_lst = []
+    for i, fi in enumerate(list_of_files):
+        ds = xr.open_dataset(fi)
+        if ds['time'].size > 1:
+            ds = ds.isel(time=0)
+        ds = preprocess(ds)
+        ds_lst.append(ds)
+    ds = xr.concat(ds_lst, dim='initialization')
+
+    return ds
+
 def read_and_regrid_prs_var(varname, ARID, date, year, final_var):
     '''
     Using xarray, reads grib data for given variable for above and below 700 mb
@@ -56,18 +69,33 @@ def read_and_regrid_prs_var(varname, ARID, date, year, final_var):
     # read data below 700 mb - 0.25 degree
     fname = path_to_data+"{0}_pres_{1}*_c00.grib2".format(varname, date)
     
-    ds_below = xr.open_mfdataset(fname, engine='cfgrib', preprocess=preprocess, concat_dim="initialization", combine='nested')
+    try:
+        ds_below = xr.open_mfdataset(fname, engine='cfgrib', preprocess=preprocess, concat_dim="initialization", combine='nested')
+    except ValueError:
+        ds_below = fix_GEFSv12_open_mfdataset(fname)
+        
     ds_below = ds_below.assign_coords({"longitude": (((ds_below.longitude + 180) % 360) - 180)}) # Convert DataArray longitude coordinates from 0-359 to -180-179
     
     # read data above 700 mb - 0.5 degree
     fname = path_to_data+"{0}_pres_abv700mb_*_c00.grib2".format(varname)
-    ds_above = xr.open_mfdataset(fname, engine='cfgrib', preprocess=preprocess, concat_dim="initialization", combine='nested')
+    try:
+        ds_above = xr.open_mfdataset(fname, engine='cfgrib', preprocess=preprocess, concat_dim="initialization", combine='nested')
+    except ValueError:
+        ds_above = fix_GEFSv12_open_mfdataset(fname)
     ds_above = ds_above.assign_coords({"longitude": (((ds_above.longitude + 180) % 360) - 180)}) # Convert DataArray longitude coordinates from 0-359 to -180-179
     
     ## regrid ds_above to same horizontal resolution as ds_below
     regrid_lats = ds_below.latitude.values
     regrid_lons = ds_below.longitude.values
     ds_above = ds_above.interp(longitude=regrid_lons, latitude=regrid_lats)
+
+    ## check for matching sizes
+    size_abv = ds_above.initialization.size
+    size_bel = ds_below.initialization.size
+    if size_abv > size_bel:
+        ds_below = ds_above.reindex_like(ds_below, method='pad', fill_value=np.nan)
+    elif size_abv < size_bel:
+        ds_above = ds_below.reindex_like(ds_above, method='pad', fill_value=np.nan)
     
     ## concatenate into single ds
     ds = xr.concat([ds_below, ds_above], dim='isobaricInhPa')
@@ -89,8 +117,14 @@ def read_sfc_var(varname, varname2, ARID):
     path_to_data = '/cw3e/mead/projects/cwp140/scratch/dnash/data/downloads/GEFSv12_reforecast/prec/{0}/'.format(ARID) 
     
     # read surfaced data
-    fname = path_to_data+"{0}_sfc_*_c00.grib2".format(varname)  
-    ds = xr.open_mfdataset(fname, engine='cfgrib', preprocess=preprocess, concat_dim="initialization", combine='nested')
+    fname = path_to_data+"{0}_sfc_*_c00.grib2".format(varname) 
+
+    try:
+        ds = xr.open_mfdataset(fname, engine='cfgrib', preprocess=preprocess, concat_dim="initialization", combine='nested')
+    except ValueError:
+        ds = fix_GEFSv12_open_mfdataset(fname)
+
+    ## Back to everyone preprocess
     ds = ds.assign_coords({"longitude": (((ds.longitude + 180) % 360) - 180)}) # Convert DataArray longitude coordinates from 0-359 to -180-179
     
     ## subset to N. Pacific [0, 70, 140, 295]
