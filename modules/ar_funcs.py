@@ -98,7 +98,7 @@ def AR_rank(ds):
     return rank
 
 
-def preprocess_IVT_info(stationID, ARID, df):
+def preprocess_IVT_info(config, ARID, df):
     '''
     For the given ASOS station location and AR track ID, calculate:
         - the maximum IVT value during the AR
@@ -106,10 +106,6 @@ def preprocess_IVT_info(stationID, ARID, df):
         - the AR Scale value
         - the time of peak IVT
     '''
-    # import configuration file for station information
-    yaml_doc = '../data/ASOS_station_info.yml'
-    config = yaml.load(open(yaml_doc), Loader=yaml.SafeLoader)
-    ASOS_dict = config[stationID]
     
     ## open the IVT dataset
     path_to_data = '/cw3e/mead/projects/cwp140/scratch/dnash/data/' 
@@ -117,29 +113,35 @@ def preprocess_IVT_info(stationID, ARID, df):
     ds = xr.open_dataset(fname)
     # Convert DataArray longitude coordinates from -180-179 to 0-359
     ds = ds.assign_coords({"lon": ds.lon % 360})
+    
+    ## loop through all the stations
+    df_lst = []
+    for key in config:
+        ASOS_dict = config[key]
+        ## select the grid closest to the station
+        ts = ds.sel(lat=ASOS_dict['lat'], lon=ASOS_dict['lon'] % 360, method='nearest')
 
-    ## select the grid closest to the station
-    ts = ds.sel(lat=ASOS_dict['lat'], lon=ASOS_dict['lon'] % 360, method='nearest')
+        ## IVT max
+        df.loc[ARID, 'IVT_max'] = ts.ivt.max().values
+        time_idx = ts.ivt.argmax(dim='time').values
+        max_IVT_time = ts.isel(time=time_idx).time.values
+        df.loc[ARID, 'IVT_max_time'] = max_IVT_time
 
-    ## IVT max
-    df.loc[ARID, 'IVT_max'] = ts.ivt.max().values
-    time_idx = ts.ivt.argmax(dim='time').values
-    max_IVT_time = ts.isel(time=time_idx).time.values
-    df.loc[ARID, 'IVT_max_time'] = max_IVT_time
+        ## AR Scale
+        df.loc[ARID, 'ar_scale'] = AR_rank(ts)
 
-    ## AR Scale
-    df.loc[ARID, 'ar_scale'] = AR_rank(ts)
+        ## IVT direction
+        ## pull IVT and IVTDIR where ivt is max
+        event_max = ts.sel(time=max_IVT_time)
+        uvec = event_max.ivtu.values
+        uvec = units.Quantity(uvec, "m/s")
+        vvec = event_max.ivtv.values
+        vvec = units.Quantity(vvec, "m/s")
+        df.loc[ARID, 'IVT_dir'] = mpcalc.wind_direction(uvec, vvec)
+        
+        df_lst.append(df)
 
-    ## IVT direction
-    ## pull IVT and IVTDIR where ivt is max
-    event_max = ts.sel(time=max_IVT_time)
-    uvec = event_max.ivtu.values
-    uvec = units.Quantity(uvec, "m/s")
-    vvec = event_max.ivtv.values
-    vvec = units.Quantity(vvec, "m/s")
-    df.loc[ARID, 'IVT_dir'] = mpcalc.wind_direction(uvec, vvec)
-
-    return df
+    return df_lst
 
 def preprocess_freezing_level(stationID, ARID, df):
     '''

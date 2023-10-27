@@ -1,0 +1,86 @@
+# Filename:    ASOS_station_info.yml
+# Author:      Deanna Nash, dnash@ucsd.edu
+# Description: Locations of ASOS precipitation stations in Southeast Alaska and other info
+
+---
+COOPAHNA2:
+  elev: '95.0'
+  lat: '59.2381'
+  lon: '-135.4494'
+  name: HAINES
+COOPHCSA2:
+  elev: '820.0'
+  lat: '59.4503'
+  lon: '-136.3615'
+  name: HAINES
+COOPHOOA2:
+  elev: '130.0'
+  lat: '58.1071'
+  lon: '-135.4277'
+  name: HOONAH
+CRGA2:
+  elev: '95.0'
+  lat: '55.47389'
+  lon: '-133.13778'
+  name: CRAIG
+HONA2:
+  elev: '450.0'
+  lat: '57.8000'
+  lon: '-135.133330'
+  name: HOONAH
+KTNA2:
+  elev: '71.0'
+  lat: '55.3796'
+  lon: '-131.4704'
+  name: Beaver
+PAGS:
+  elev: '33.0'
+  lat: '58.41667'
+  lon: '-135.70'
+  name: Gustavus
+PAGY:
+  elev: '21.0'
+  lat: '59.45440'
+  lon: '-135.32630'
+  name: Skagway
+PAHN:
+  elev: '49.0'
+  lat: '59.24290'
+  lon: '-135.51140'
+  name: Haines
+PAJN:
+  elev: '20.0'
+  lat: '58.35472'
+  lon: '-134.57611'
+  name: Juneau
+PAKT:
+  elev: '89.0'
+  lat: '55.35556'
+  lon: '-131.71361'
+  name: Ketchikan
+PAKW:
+  elev: '32.0'
+  lat: '55.58390'
+  lon: '-133.06700'
+  name: Klawock
+PAPG:
+  elev: '71.0'
+  lat: '56.80170'
+  lon: '-132.94530'
+  name: Petersburg
+PASI:
+  elev: '13.0'
+  lat: '57.04800'
+  lon: '-135.36470'
+  name: Sitka
+PAWG:
+  elev: '43.0'
+  lat: '56.48333'
+  lon: '-132.36667'
+  name: Wrangell
+PAYA:
+  elev: '36.0'
+  lat: '59.51667'
+  lon: '-139.66667'
+  name: Yakutat
+...
