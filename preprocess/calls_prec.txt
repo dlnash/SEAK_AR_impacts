@@ -1,1 +1,0 @@
-python download_and_preprocess_GEFSv12_prec.py config_prec.yaml 'job_1'
