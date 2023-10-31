@@ -29,7 +29,7 @@ for i, fi in enumerate(filenames):
 dest = dict(chain.from_iterable(map(dict.items, d_lst)))
 
 ## write to .yaml file and close
-file=open("../data/ASOS_station_info_new.yaml","w")
+file=open("../data/ASOS_station_info.yaml","w")
 yaml.dump(dest,file)
 file.close()
 print("YAML file saved.")

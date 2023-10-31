@@ -42,8 +42,10 @@ def build_empty_df(stationID):
     duration_df['ARI_12hr'] = np.nan # 12 hr ARI based on Atlas 14 and ASOS prec
     duration_df['ARI_24hr'] = np.nan # 24 hr ARI based on Atlas 14 and ASOS prec
     duration_df['impact_scale'] = np.nan # AR impact scale assigned by Aaron
-    duration_df['impacts'] = np.nan # 0 or 1 depending on if Aaron has an impact in database at that station
+    duration_df['impacts'] = 0 # 0 or 1 depending on if Aaron has an impact in database at that station
     duration_df['impact_notes'] = np.nan # copies description of impacts over
+    duration_df['impact_type'] = np.nan # type of impact
+    duration_df['misc'] = np.nan # copies other notes over
     
     return duration_df
 
@@ -82,7 +84,7 @@ def AR_rank(ds):
     elif (max_IVT >= 1250):
         prelim_rank = 5
     else:
-        prelim_rank = np.nan()
+        prelim_rank = np.nan
         
         
     # get maximum AR duration with IVT >=250 kg m-1 s-1
@@ -98,106 +100,105 @@ def AR_rank(ds):
     return rank
 
 
-def preprocess_IVT_info(config, ARID, df):
+def read_GEFSv12_reforecast_data(varname, ARID):
+    
+    ## open the dataset
+    path_to_data = '/data/projects/Comet/cwp140/' 
+    fname = path_to_data + 'preprocessed/GEFSv12_reforecast/{0}/{1}_{0}.nc'.format(varname, ARID)
+    ds = xr.open_dataset(fname)
+    # Convert DataArray longitude coordinates from -180-179 to 0-359
+    ds = ds.assign_coords({"lon": ds.lon % 360})
+    
+    return ds
+
+def preprocess_IVT_info(config, ds, ARID, df_lst):
     '''
     For the given ASOS station location and AR track ID, calculate:
         - the maximum IVT value during the AR
         - the IVT direction at the time of peak IVT
         - the AR Scale value
         - the time of peak IVT
-    '''
-    
-    ## open the IVT dataset
-    path_to_data = '/cw3e/mead/projects/cwp140/scratch/dnash/data/' 
-    fname = path_to_data + 'preprocessed/GEFSv12_reforecast/ivt/{0}_ivt.nc'.format(ARID)
-    ds = xr.open_dataset(fname)
-    # Convert DataArray longitude coordinates from -180-179 to 0-359
-    ds = ds.assign_coords({"lon": ds.lon % 360})
+    '''   
     
     ## loop through all the stations
-    df_lst = []
-    for key in config:
-        ASOS_dict = config[key]
+    df_final = []
+    for i, (stationID, df) in enumerate(zip(config, df_lst)):
+
         ## select the grid closest to the station
-        ts = ds.sel(lat=ASOS_dict['lat'], lon=ASOS_dict['lon'] % 360, method='nearest')
+        lat = float(config[stationID]['lat'])
+        lon = float(config[stationID]['lon']) % 360
+        ts = ds.sel(lat=lat, lon=lon, method='nearest')
 
         ## IVT max
-        df.loc[ARID, 'IVT_max'] = ts.ivt.max().values
-        time_idx = ts.ivt.argmax(dim='time').values
-        max_IVT_time = ts.isel(time=time_idx).time.values
-        df.loc[ARID, 'IVT_max_time'] = max_IVT_time
+        try:
+            df.loc[ARID, 'IVT_max'] = ts.ivt.max().values
+            time_idx = ts.ivt.argmax(dim='time').values
+            max_IVT_time = ts.isel(time=time_idx).time.values
+            df.loc[ARID, 'IVT_max_time'] = max_IVT_time
 
-        ## AR Scale
-        df.loc[ARID, 'ar_scale'] = AR_rank(ts)
+            ## AR Scale
+            df.loc[ARID, 'ar_scale'] = AR_rank(ts)
 
-        ## IVT direction
-        ## pull IVT and IVTDIR where ivt is max
-        event_max = ts.sel(time=max_IVT_time)
-        uvec = event_max.ivtu.values
-        uvec = units.Quantity(uvec, "m/s")
-        vvec = event_max.ivtv.values
-        vvec = units.Quantity(vvec, "m/s")
-        df.loc[ARID, 'IVT_dir'] = mpcalc.wind_direction(uvec, vvec)
-        
-        df_lst.append(df)
+            ## IVT direction
+            ## pull IVT and IVTDIR where ivt is max
+            event_max = ts.sel(time=max_IVT_time)
+            uvec = event_max.ivtu.values
+            uvec = units.Quantity(uvec, "m/s")
+            vvec = event_max.ivtv.values
+            vvec = units.Quantity(vvec, "m/s")
+            df.loc[ARID, 'IVT_dir'] = mpcalc.wind_direction(uvec, vvec)
+            
+            df_final.append(df)
+            
+        except ValueError:
+            print(ARID)
 
-    return df_lst
+    return df_final
 
-def preprocess_freezing_level(stationID, ARID, df):
+def preprocess_freezing_level(config, ds, ARID, df_lst):
     '''
     For the given ASOS station location and AR track ID, calculate:
         - freezing level at the time of peak IVT
     '''
-    # import configuration file for station information
-    yaml_doc = '../data/ASOS_station_info.yml'
-    config = yaml.load(open(yaml_doc), Loader=yaml.SafeLoader)
-    ASOS_dict = config[stationID]
-    
-    ## open the prec dataset
-    path_to_data = '/cw3e/mead/projects/cwp140/scratch/dnash/data/' 
-    fname = path_to_data + 'preprocessed/GEFSv12_reforecast/freezing_level/{0}_freezing_level.nc'.format(ARID)
-    ds = xr.open_dataset(fname)
-    # Convert DataArray longitude coordinates from -180-179 to 0-359
-    ds = ds.assign_coords({"lon": ds.lon % 360})
+    ## loop through all the stations
+    df_final = []
+    for i, (stationID, df) in enumerate(zip(config, df_lst)):
+        ## select the grid closest to the station
+        lat = float(config[stationID]['lat'])
+        lon = float(config[stationID]['lon']) % 360
+        ts = ds.sel(lat=lat, lon=lon, method='nearest')
 
-    ## select the grid closest to the station
-    ts = ds.sel(lat=ASOS_dict['lat'], lon=ASOS_dict['lon'] % 360, method='nearest')
+        ## subset to start and end dates of AR event
+        max_IVT_time = df.loc[ARID, 'IVT_max_time']
+        ts = ts.sel(time=max_IVT_time)
 
-    ## subset to start and end dates of AR event
-    max_IVT_time = df.loc[ARID, 'IVT_max_time']
-    ts = ts.sel(time=max_IVT_time)
+        df.loc[ARID, 'freezing_level'] = ts.freezing_level.values # freezing level at the time of peak IVT
+        
+        df_final.append(df)
 
-    df.loc[ARID, 'freezing_level'] = ts.freezing_level.values # freezing level at the time of peak IVT
+    return df_final
 
-    return df
-
-def preprocess_prec_GEFS(stationID, ARID, df):
+def preprocess_prec_GEFS(config, ds, ARID, df_lst):
     '''
     For the given ASOS station location and AR track ID, calculate:
         - the total accumulated precipitation
         - the peak precipitation intensity (3-hourly)
     '''
-    # import configuration file for station information
-    yaml_doc = '../data/ASOS_station_info.yml'
-    config = yaml.load(open(yaml_doc), Loader=yaml.SafeLoader)
-    ASOS_dict = config[stationID]
-    
-    ## open the prec dataset
-    path_to_data = '/cw3e/mead/projects/cwp140/scratch/dnash/data/' 
-    fname = path_to_data + 'preprocessed/GEFSv12_reforecast/prec/{0}_prec.nc'.format(ARID)
-    ds = xr.open_dataset(fname)
-    # Convert DataArray longitude coordinates from -180-179 to 0-359
-    ds = ds.assign_coords({"lon": ds.lon % 360})
+    ## loop through all the stations
+    df_final = []
+    for i, (stationID, df) in enumerate(zip(config, df_lst)):
+        ## select the grid closest to the station
+        lat = float(config[stationID]['lat'])
+        lon = float(config[stationID]['lon']) % 360
+        ts = ds.sel(lat=lat, lon=lon, method='nearest')
 
-    ## select the grid closest to the station
-    ts = ds.sel(lat=ASOS_dict['lat'], lon=ASOS_dict['lon'] % 360, method='nearest')
+        ## subset to start and end dates of AR event
+        start_date = df.loc[ARID, 'start_date']
+        end_date = df.loc[ARID, 'end_date']
+        ts = ts.sel(time=slice(start_date, end_date))
 
-    ## subset to start and end dates of AR event
-    start_date = df.loc[ARID, 'start_date']
-    end_date = df.loc[ARID, 'end_date']
-    ts = ts.sel(time=slice(start_date, end_date))
+        df.loc[ARID, 'GFS_prec_accum'] = ts.tp.sum().values # total accumulated precipitation
+        df.loc[ARID, 'GFS_prec_max_rate'] = ts.tp.max().values # peak 3-hour precip intensity
+        df_final.append(df)
 
-    df.loc[ARID, 'GFS_prec_accum'] = ts.tp.sum().values # total accumulated precipitation
-    df.loc[ARID, 'GFS_prec_max_rate'] = ts.tp.max().values # peak 3-hour precip intensity
-
-    return df
+    return df_final
