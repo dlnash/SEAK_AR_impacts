@@ -11,7 +11,7 @@
 #SBATCH --mail-type=ALL # Type of email notification- BEGIN,END,FAIL,ALL
 #SBATCH --mail-user=dnash@ucsd.edu # Email to which notifications will be sent
 #SBATCH --qos=unlim
-#SBATCH --array=1-1499%100
+#SBATCH --array=1-6%10
 
 # Activate Anaconda work environment
 source /home/${USER}/.bashrc
