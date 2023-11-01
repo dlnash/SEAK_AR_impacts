@@ -13,15 +13,21 @@ import pandas as pd
 from itertools import groupby
 import metpy.calc as mpcalc
 from metpy.units import units
+from scipy.integrate import trapz
 
 
 ## FUNCTIONS
-
+def get_new_start(value):
+    s = str(int(value))
+    new_date = pd.to_datetime(s[:10], format='%Y%m%d%H')
+    
+    return new_date
 
 def build_empty_df(stationID):
     ## read AR duration file
     duration_df = pd.read_csv('../out/AR_track_duration_SEAK.csv')
-    duration_df['start_date'] = pd.to_datetime(duration_df['start_date'])
+    # duration_df['start_date'] = pd.to_datetime(duration_df['start_date'])
+    duration_df['start_date'] = duration_df['trackID'].map(get_new_start)
     duration_df['end_date'] = pd.to_datetime(duration_df['end_date'])
     duration_df.index = duration_df['trackID']
     
@@ -30,6 +36,7 @@ def build_empty_df(stationID):
     duration_df['IVT_max'] = np.nan # maximum IVT during the AR event
     duration_df['IVT_max_time'] = np.nan # timestamp of maximum IVT during the AR event
     duration_df['IVT_dir'] = np.nan # IVT direction at the time of peak IVT
+    duration_df['tIVT'] = np.nan # time-integrated IVT for the 7 days prior to start of storm, plus duration of storm
     duration_df['freezing_level'] = np.nan # freezing level at the time of peak IVT
     duration_df['ar_scale'] = np.nan # calculated AR scale based on GEFS 
     duration_df['GFS_prec_accum'] = np.nan # total accumulated precipitation (GEFS)
@@ -99,6 +106,14 @@ def AR_rank(ds):
         
     return rank
 
+def calc_time_integrated_IVT(ds):
+    # time integrate IVT
+    time = np.arange(0, (len(ds.time)*3), 3)*3600 # convert to seconds
+    tIVTu = trapz(y=ds.ivtu.values, x=time, axis=0)
+    tIVTv = trapz(y=ds.ivtv.values, x=time, axis=0)
+    tIVT = np.sqrt(tIVTu**2 + tIVTv**2)
+    
+    return tIVT
 
 def read_GEFSv12_reforecast_data(varname, ARID):
     
@@ -109,7 +124,13 @@ def read_GEFSv12_reforecast_data(varname, ARID):
     # Convert DataArray longitude coordinates from -180-179 to 0-359
     ds = ds.assign_coords({"lon": ds.lon % 360})
     
+    if varname == 'ivt':
+        tIVT = calc_time_integrated_IVT(ds)
+        ds = ds.assign(tIVT=(['lat', 'lon'], tIVT))
+    else: pass
+    
     return ds
+
 
 def preprocess_IVT_info(config, ds, ARID, df_lst):
     '''
@@ -128,30 +149,34 @@ def preprocess_IVT_info(config, ds, ARID, df_lst):
         lat = float(config[stationID]['lat'])
         lon = float(config[stationID]['lon']) % 360
         ts = ds.sel(lat=lat, lon=lon, method='nearest')
+        
+        ## subset to start and end dates of AR event
+        start_date = df.loc[ARID, 'start_date']
+        end_date = df.loc[ARID, 'end_date']
+        ts = ts.sel(time=slice(start_date, end_date))
 
         ## IVT max
-        try:
-            df.loc[ARID, 'IVT_max'] = ts.ivt.max().values
-            time_idx = ts.ivt.argmax(dim='time').values
-            max_IVT_time = ts.isel(time=time_idx).time.values
-            df.loc[ARID, 'IVT_max_time'] = max_IVT_time
+        df.loc[ARID, 'IVT_max'] = ts.ivt.max().values
+        time_idx = ts.ivt.argmax(dim='time').values
+        max_IVT_time = ts.isel(time=time_idx).time.values
+        df.loc[ARID, 'IVT_max_time'] = max_IVT_time
 
-            ## AR Scale
-            df.loc[ARID, 'ar_scale'] = AR_rank(ts)
+        ## AR Scale
+        df.loc[ARID, 'ar_scale'] = AR_rank(ts)
 
-            ## IVT direction
-            ## pull IVT and IVTDIR where ivt is max
-            event_max = ts.sel(time=max_IVT_time)
-            uvec = event_max.ivtu.values
-            uvec = units.Quantity(uvec, "m/s")
-            vvec = event_max.ivtv.values
-            vvec = units.Quantity(vvec, "m/s")
-            df.loc[ARID, 'IVT_dir'] = mpcalc.wind_direction(uvec, vvec)
-            
-            df_final.append(df)
-            
-        except ValueError:
-            print(ARID)
+        ## IVT direction
+        ## pull IVT and IVTDIR where ivt is max
+        event_max = ts.sel(time=max_IVT_time)
+        uvec = event_max.ivtu.values
+        uvec = units.Quantity(uvec, "m/s")
+        vvec = event_max.ivtv.values
+        vvec = units.Quantity(vvec, "m/s")
+        df.loc[ARID, 'IVT_dir'] = mpcalc.wind_direction(uvec, vvec)
+        
+        ## tIVT
+        df.loc[ARID, 'tIVT'] = ts.tIVT.values
+
+        df_final.append(df)
 
     return df_final
 
