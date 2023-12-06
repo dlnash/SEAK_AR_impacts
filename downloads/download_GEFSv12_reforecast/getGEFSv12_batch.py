@@ -22,5 +22,5 @@ ens = ddict['ens']
 varname = 'ivt' ## can be 'ivt', 'freezing_level', or 'prec'
 
 ## run download_GEFSv12_reforecast.sh to download data 
-bash_script = "download_GEFSv12_reforecast.sh"
+bash_script = "/cw3e/mead/projects/cwp140/scratch/dnash/repos/SEAK_AR_impacts/downloads/download_GEFSv12_reforecast/download_GEFSv12_reforecast.sh"
 print(subprocess.run([bash_script, year, date, ens, varname]))
