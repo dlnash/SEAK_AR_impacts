@@ -9,4 +9,5 @@
 ## ignore data folder
 /figs/*
 /out/*
+/downloads/download_GEFSv12_reforecast/slurm_out/*
 /preprocess/slurm_out/*

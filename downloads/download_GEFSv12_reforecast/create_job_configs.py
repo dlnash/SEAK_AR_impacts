@@ -78,7 +78,7 @@ file.close()
 for i, njobs in enumerate(njob_lst):
     call_str_lst = []
     for j, job in enumerate(range(1, njobs+1, 1)):
-        call_string = "bash download_GEFSv12_reforecast.sh config_{0}.yaml 'job_{1}'".format(i+1, j+1)
+        call_string = "python getGEFSv12_batch.py config_{0}.yaml 'job_{1}'".format(i+1, j+1)
         call_str_lst.append(call_string)
         
     ## now write those lines to a text file
