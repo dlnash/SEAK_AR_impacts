@@ -7,6 +7,7 @@ Description: Functions for getting AR metrics
 # Import Python modules
 import os, sys
 import yaml
+import glob
 import numpy as np
 import xarray as xr
 import pandas as pd
@@ -14,9 +15,72 @@ from itertools import groupby
 import metpy.calc as mpcalc
 from metpy.units import units
 from scipy.integrate import trapz
+from pandas.tseries.offsets import MonthEnd
 
 
 ## FUNCTIONS
+
+def clean_impact_data(start_date = '2000-01-01', end_date = '2019-08-31'):
+    fname = '/data/projects/Comet/cwp140/downloads/ar_impact_info.csv'
+    impact_df = pd.read_csv(fname)
+    impact_df = impact_df.set_index(pd.to_datetime(impact_df['Impact dates']))
+    idx = (impact_df.index >= start_date) & (impact_df.index <= end_date)
+    impact_df = impact_df.loc[idx]
+    ## fix names of stations to match ASOS/COOP station ID
+    ## we chose HONA2 OVER COOPHOOA2 because it had a longer period of record and also hourly data
+    ## we chose PAJN over JNEA2 because it had a longer period of record
+    ## choose PAHN for Haines over COOPAHNA2 bc it had a longer period of record and only daily data
+    impact_df['Location'] = impact_df['Location'].replace({'JNNA2': 'PAJN', 'PECA2': 'COOPPECA2', 
+                            'HCSA2': 'COOPHCSA2', 'AHNA2': 'PAHN',
+                            'Thorne Bay': 'PAKW', 'Thorne Bay/PAKW': 'PAKW',
+                            'Staney/PAKW': 'PAKW', 'HOOA2': 'HONA2',
+                            np.nan: 'PAJN'})
+    ## drop Pelican events bc they are the same as many other communities
+    ## also Pelican station does not have precip info for this event
+    impact_df = impact_df[impact_df['Location'] != 'COOPPECA2'] 
+    
+    return impact_df
+
+def add_impact_info(stationIDX, stationID):
+    
+    test = impact_df.loc[(impact_df['Location'] == stationID)]
+    ## current station df
+    subset_df = df_lst[stationIDX]
+    subset_df['impact_type'] = np.nan # type of impact
+    subset_df['misc'] = np.nan # copies other notes over
+        
+    ar_impact = []
+    for idx_impact, row_impact in test.iterrows():
+        year = idx_impact.year
+        month = idx_impact.month
+
+        ## subset to year/month of current row in impact dataframe +- 15 days
+        start = pd.to_datetime('{0}-{1}-01'.format(year, month)) - pd.DateOffset(days=15)
+        end = pd.to_datetime('{0}-{1}'.format(idx_impact.year, idx_impact.month), format="%Y-%m") + MonthEnd(0, normalize=True) + pd.DateOffset(days=15)
+        idx = (subset_df['start_date'] >= start) & (subset_df['end_date'] <= end)
+        tmp = subset_df.loc[idx]
+
+        for index, row in tmp.iterrows():
+            date1 = row['start_date'] - pd.DateOffset(hours=24)
+            date2 = row['end_date'] + pd.DateOffset(hours=24)
+
+            if date1 <= idx_impact <= date2:
+                # print(date1, date2, impact_date, index, "PASS!")
+                ar_impact.append(idx_impact)
+                subset_df.loc[index, 'impact_scale'] = row_impact['Impact Level']
+                subset_df.loc[index, 'impacts'] = 1
+                subset_df.loc[index, 'impact_type'] = row_impact['Impact']
+                subset_df.loc[index, 'impact_notes'] = row_impact['Impact Information']
+                subset_df.loc[index, 'misc'] = row_impact['Notes']
+            else:
+                pass
+    ## get the impact dates not found in AR database        
+    a = ar_impact
+    b = test.index
+    ar_not_found = set(a) ^ set(b)
+                
+    return subset_df, ar_not_found
+
 def get_new_start(value):
     s = str(int(value))
     new_date = pd.to_datetime(s[:10], format='%Y%m%d%H')
@@ -42,12 +106,11 @@ def build_empty_df(stationID):
     duration_df['GFS_prec_accum'] = np.nan # total accumulated precipitation (GEFS)
     duration_df['GFS_prec_max_rate'] = np.nan # peak rain rate during the AR event (GEFS)
     duration_df['ASOS_prec_accum'] = np.nan # total accumulated precipitation (ASOS)
-    duration_df['ASOS_prec_max_rate'] = np.nan # peak rain rate during the AR event (ASOS)
-    duration_df['ARI_1hr'] = np.nan # 1 hr ARI based on Atlas 14 and ASOS prec
-    duration_df['ARI_3hr'] = np.nan # 3 hr ARI based on Atlas 14 and ASOS prec
-    duration_df['ARI_6hr'] = np.nan # 6 hr ARI based on Atlas 14 and ASOS prec
-    duration_df['ARI_12hr'] = np.nan # 12 hr ARI based on Atlas 14 and ASOS prec
-    duration_df['ARI_24hr'] = np.nan # 24 hr ARI based on Atlas 14 and ASOS prec
+    duration_df['ASOS_1hr'] = np.nan # 1 hr ARI based on Atlas 14 and ASOS prec
+    duration_df['ASOS_3hr'] = np.nan # 3 hr ARI based on Atlas 14 and ASOS prec
+    duration_df['ASOS_6hr'] = np.nan # 6 hr ARI based on Atlas 14 and ASOS prec
+    duration_df['ASOS_12hr'] = np.nan # 12 hr ARI based on Atlas 14 and ASOS prec
+    duration_df['ASOS_24hr'] = np.nan # 24 hr ARI based on Atlas 14 and ASOS prec
     duration_df['impact_scale'] = np.nan # AR impact scale assigned by Aaron
     duration_df['impacts'] = 0 # 0 or 1 depending on if Aaron has an impact in database at that station
     duration_df['impact_notes'] = np.nan # copies description of impacts over
@@ -55,6 +118,65 @@ def build_empty_df(stationID):
     duration_df['misc'] = np.nan # copies other notes over
     
     return duration_df
+
+def read_mesowest_prec_data(stationID):
+    fname = glob.glob('/home/dnash/comet_data/downloads/mesowest/{0}.*.csv'.format(stationID))
+    skip_lst = np.arange(0, 10).tolist()
+    skip_lst.append(11)
+    prec_df = pd.read_csv(fname[0], skiprows=skip_lst, header=0)
+    prec_df['date_time'] = pd.to_datetime(prec_df['Date_Time']).dt.tz_localize(None)
+    prec_df = prec_df.set_index(['date_time'])
+    
+    if 'precip_accum_one_hour_set_1' in prec_df.columns:
+
+        prec_df['prec_1h'] = prec_df['precip_accum_one_hour_set_1']
+    elif 'precip_accum_set_1' in prec_df.columns:
+
+        prec_df['prec_1h'] = prec_df['precip_accum_set_1'].diff()   
+    elif 'precip_accum_24_hour_set_1' in prec_df.columns:
+
+        ## get daily values, then divide by 24 for each hour within that day
+        prec_df['prec_1h'] =  prec_df['precip_accum_24_hour_set_1'].dropna().resample('1H').ffill()/24.
+    
+    return prec_df
+
+def preprocess_mesowest_precip(ARID, prec_df_lst, df_lst, start_date, end_date): 
+    df_final = []
+    for i, (prec_df, df) in enumerate(zip(prec_df_lst, df_lst)):
+        # print(prec_df['Station_ID'].iloc[0])
+        ## loop through each row in the AR duration df
+        idx = (prec_df.index >= start_date) & (prec_df.index <= end_date)
+        tmp = prec_df.loc[idx]
+
+        ## pull out the total accumulated preciptiation
+        accum_prec = tmp['prec_1h'].sum()
+        # print('... Total accumulated precip...', accum_prec)
+        ## pull peak 1h precip rate for duration of event
+        peak_1hr = tmp['prec_1h'].max()
+        # print('... 1 hr max precip...', peak_1hr)
+        ## pull peak 3h precip rate for duration of event
+        peak_3hr = tmp['prec_1h'].resample('3H').sum().max()
+        # print('... 3 hr max precip...', peak_3hr)
+        ## pull peak 6h precip rate for duration of event
+        peak_6hr = tmp['prec_1h'].resample('6H').sum().max()
+        # print('... 6 hr max precip...', peak_6hr)
+        ## pull peak 12h precip rate for duration of event
+        peak_12hr = tmp['prec_1h'].resample('12H').sum().max()
+        # print('... 12 hr max precip...', peak_12hr)
+        ## pull peak 24h precip rate for duration of event
+        peak_24hr = tmp['prec_1h'].resample('24H').sum().max()
+        # print('... 24 hr max precip...', peak_24hr)
+        
+        df.loc[ARID, 'ASOS_prec_accum'] = accum_prec # total accumulated precipitation (ASOS)
+        df.loc[ARID, 'ASOS_1hr'] = peak_1hr # 1 hr ARI based on Atlas 14 and ASOS prec
+        df.loc[ARID, 'ASOS_3hr'] = peak_3hr # 3 hr ARI based on Atlas 14 and ASOS prec
+        df.loc[ARID, 'ASOS_6hr'] = peak_6hr # 6 hr ARI based on Atlas 14 and ASOS prec
+        df.loc[ARID, 'ASOS_12hr'] = peak_12hr # 12 hr ARI based on Atlas 14 and ASOS prec
+        df.loc[ARID, 'ASOS_24hr'] = peak_24hr # 24 hr ARI based on Atlas 14 and ASOS prec
+        
+        df_final.append(df)
+        
+    return df_final
 
 def AR_rank(ds):
     """
@@ -122,7 +244,7 @@ def read_GEFSv12_reforecast_data(varname, ARID):
     fname = path_to_data + 'preprocessed/GEFSv12_reforecast/{0}/{1}_{0}.nc'.format(varname, ARID)
     ds = xr.open_dataset(fname)
     # Convert DataArray longitude coordinates from -180-179 to 0-359
-    ds = ds.assign_coords({"lon": ds.lon % 360})
+    ds = ds.assign_coords({"longitude": ds.lon % 360})
     
     if varname == 'ivt':
         tIVT = calc_time_integrated_IVT(ds)

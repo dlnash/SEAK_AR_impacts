@@ -14,5 +14,5 @@ This script uses SLURM and job array to download and preprocess IVT, freezing le
 
 3. preprocess_database.py
 
-TODO: This script connects tARget v3 (AR duration data), GEFSv12 (IVT, precipitation, snow level), impact data (NWS), and ASOS/COOP (precipitation) data into a single dataframe and saves as a .csv.
+This script connects tARget v3 (AR duration data), GEFSv12 (IVT, precipitation, snow level), impact data (NWS), and ASOS/COOP (precipitation) data into a single dataframe and saves as a .csv for each station. 
 

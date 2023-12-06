@@ -12,6 +12,8 @@ import matplotlib.pyplot as plt
 import cartopy.crs as ccrs
 import cartopy.feature as cfeature
 from cartopy.mpl.gridliner import LONGITUDE_FORMATTER, LATITUDE_FORMATTER
+from cartopy.mpl.ticker import (LongitudeFormatter, LatitudeFormatter,
+                                LatitudeLocator, LongitudeLocator)
 import matplotlib.ticker as mticker
 import colorsys
 from matplotlib.colors import LinearSegmentedColormap # Linear interpolation for color maps
@@ -66,7 +68,7 @@ def draw_basemap(ax, datacrs=ccrs.PlateCarree(), extent=None, xticks=None, ytick
     - Alpha sets transparency (0 is transparent, 1 is solid)
     
     """
-
+    kw_ticks = {'labelsize': 8., 'colors': 'gray'}
     # Use map projection (CRS) of the given Axes
     mapcrs = ax.projection    
     
@@ -100,18 +102,18 @@ def draw_basemap(ax, datacrs=ccrs.PlateCarree(), extent=None, xticks=None, ytick
                       linewidth=.5, color='black', alpha=0.5, linestyle='--')
         
     else:
-        gl = ax.gridlines(crs=datacrs, draw_labels=True,
-                      linewidth=.5, color='black', alpha=0.5, linestyle='--')
-        gl.top_labels = False
-        gl.left_labels = left_lats
-        gl.right_labels = right_lats
-        gl.bottom_labels = bottom_lons
-        gl.xlocator = mticker.FixedLocator(xticks)
-        gl.ylocator = mticker.FixedLocator(yticks)
-        gl.xformatter = LONGITUDE_FORMATTER
-        gl.yformatter = LATITUDE_FORMATTER
-        gl.xlabel_style = {'size': 10, 'color': 'gray', 'fontweight': 'light'}
-        gl.ylabel_style = {'size': 10, 'color': 'gray', 'fontweight': 'light'}
+        # apply tick parameters
+        ax.set_xticks(xticks, crs=datacrs)
+        ax.set_yticks(yticks, crs=datacrs)
+        lon_formatter = LongitudeFormatter(zero_direction_label=True)
+        lat_formatter = LatitudeFormatter()
+        ax.xaxis.set_major_formatter(lon_formatter)
+        ax.yaxis.set_major_formatter(lat_formatter)
+        
+        gl = ax.gridlines(crs=datacrs, draw_labels=False,
+                  linewidth=0.5, color='black', alpha=0.5, linestyle='--')
+
+        ax.tick_params(axis='both', **kw_ticks)
     
     ## Gridlines
     # Draw gridlines if requested
@@ -129,6 +131,9 @@ def draw_basemap(ax, datacrs=ccrs.PlateCarree(), extent=None, xticks=None, ytick
                    length=4, 
                    pad=2, 
                    color='black')
+    
+    
+    
     
     return ax
 

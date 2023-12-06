@@ -1,43 +1,18 @@
-COOPAHNA2:
-  elev: '95.0'
-  lat: '59.2381'
-  lon: '-135.4494'
-  name: HAINES
 COOPHCSA2:
   elev: '820.0'
   lat: '59.4503'
   lon: '-136.3615'
-  name: HAINES
-COOPHOOA2:
-  elev: '130.0'
-  lat: '58.1071'
-  lon: '-135.4277'
-  name: HOONAH
-COOPPECA2:
-  elev: '12.0'
-  lat: '57.9577'
-  lon: '-136.2213'
-  name: PELICAN
-CRGA2:
-  elev: '95.0'
-  lat: '55.47389'
-  lon: '-133.13778'
-  name: CRAIG
+  name: Haines
 HONA2:
   elev: '450.0'
   lat: '57.8000'
   lon: '-135.133330'
-  name: HOONAH
-JNEA2:
-  elev: '0.0'
-  lat: '58.29830'
-  lon: '-134.41200'
-  name: Juneau
+  name: Hoonah
 KTNA2:
   elev: '71.0'
   lat: '55.3796'
   lon: '-131.4704'
-  name: Beaver
+  name: Beaver Creek
 PAGS:
   elev: '33.0'
   lat: '58.41667'
@@ -53,11 +28,6 @@ PAHN:
   lat: '59.24290'
   lon: '-135.51140'
   name: Haines
-PAJK:
-  elev: '89.0'
-  lat: '58.40000'
-  lon: '-134.57001'
-  name: NWS
 PAJN:
   elev: '20.0'
   lat: '58.35472'
