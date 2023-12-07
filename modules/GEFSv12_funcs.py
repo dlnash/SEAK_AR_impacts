@@ -54,7 +54,7 @@ def fix_GEFSv12_open_mfdataset(fname):
 
     return ds
 
-def read_and_regrid_prs_var(varname, ARID, date, year, final_var):
+def read_and_regrid_prs_var(varname, date, year, ens, final_var):
     '''
     Using xarray, reads grib data for given variable for above and below 700 mb
     Regrids the data above 700 mb to same horizontal resolution as data below 700 mb
@@ -64,10 +64,10 @@ def read_and_regrid_prs_var(varname, ARID, date, year, final_var):
         xarray dataset of variable at 0.25 degree horizonal resolution at all given pressure levels
     '''
     
-    path_to_data = '/cw3e/mead/projects/cwp140/scratch/dnash/data/downloads/GEFSv12_reforecast/{0}/{1}/'.format(final_var, ARID) 
+    path_to_data = '/cw3e/mead/projects/cwp140/scratch/dnash/data/downloads/GEFSv12_reforecast/{0}/'.format(date) 
     
     # read data below 700 mb - 0.25 degree
-    fname = path_to_data+"{0}_pres_{1}*_c00.grib2".format(varname, date)
+    fname = path_to_data+"{0}_pres_{1}*_{2}.grib2".format(varname, date, ens)
     
     try:
         ds_below = xr.open_mfdataset(fname, engine='cfgrib', preprocess=preprocess, concat_dim="initialization", combine='nested')
@@ -77,7 +77,7 @@ def read_and_regrid_prs_var(varname, ARID, date, year, final_var):
     ds_below = ds_below.assign_coords({"longitude": (((ds_below.longitude + 180) % 360) - 180)}) # Convert DataArray longitude coordinates from 0-359 to -180-179
     
     # read data above 700 mb - 0.5 degree
-    fname = path_to_data+"{0}_pres_abv700mb_*_c00.grib2".format(varname)
+    fname = path_to_data+"{0}_pres_abv700mb_*_{1}.grib2".format(varname, ens)
     try:
         ds_above = xr.open_mfdataset(fname, engine='cfgrib', preprocess=preprocess, concat_dim="initialization", combine='nested')
     except ValueError:
@@ -100,8 +100,8 @@ def read_and_regrid_prs_var(varname, ARID, date, year, final_var):
     ## concatenate into single ds
     ds = xr.concat([ds_below, ds_above], dim='isobaricInhPa')
     
-    ## subset to N. Pacific [0, 70, 140, 295]
-    ds = ds.sel(latitude=slice(70, 0), longitude=slice(140, -120.))
+    ## subset to N. America [0, 70, 180, 295]
+    ds = ds.sel(latitude=slice(70, 0), longitude=slice(-179.5, -60.))
     
     return ds
 
