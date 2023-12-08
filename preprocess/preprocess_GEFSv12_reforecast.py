@@ -21,7 +21,7 @@ config_file = str(sys.argv[1]) # this is the config file name
 job_info = str(sys.argv[2]) # this is the job name
 
 config = yaml.load(open(config_file), Loader=yaml.SafeLoader) # read the file
-job = config[job_info] # pull the job info from the dict
+ddict = config[job_info] # pull the job info from the dict
 
 year = ddict['year']
 date = ddict['date']

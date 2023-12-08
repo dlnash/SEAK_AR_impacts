@@ -22,6 +22,7 @@ if [ $VARNAME == 'ivt' ]; then
     vgrd_pres_abv700mb ## V above 700 mb
     spfh_pres ## Q below 700 mb
     spfh_pres_abv700mb ## Q above 700 mb
+    pres_sfc ## surface pressure - need this because GEFS puts values below the surface
     )
 elif [ $VARNAME == 'prec' ]; then
     var_array=(
