@@ -1,7 +1,7 @@
 ######################################################################
 # Filename:    create_job_configs.py
 # Author:      Deanna Nash dnash@ucsd.edu
-# Description: Script to create .yaml configuration file to run job_array with slurm
+# Description: Script to create .yaml configuration file to run job_array with slurm for preprocessing GEFSv12 Reforecast Data
 #
 ######################################################################
 
@@ -44,9 +44,7 @@ for i, date in enumerate(final_lst):
     dt = t.strftime("%Y%m%d")
     d = {'job_{0}'.format(jobcounter):
          {'year': yr,
-          'date': dt,
-          'ens': 'p03' ## 'c00', 'p01', 'p02', 'p03', 'p04'
-          }}
+          'date': dt}}
     d_lst.append(d)
     
     if (jobcounter == 999):
@@ -78,7 +76,7 @@ file.close()
 for i, njobs in enumerate(njob_lst):
     call_str_lst = []
     for j, job in enumerate(range(1, njobs+1, 1)):
-        call_string = "python getGEFSv12_batch.py config_{0}.yaml 'job_{1}'".format(i+1, j+1)
+        call_string = "python preprocess_GEFSv12_reforecast.py config_{0}.yaml 'job_{1}'".format(i+1, j+1)
         call_str_lst.append(call_string)
         
     ## now write those lines to a text file

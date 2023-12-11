@@ -9,7 +9,7 @@ import numpy as np
 import pandas as pd
 import xarray as xr
 from datetime import timedelta
-from scipy.integrate import trapz
+from scipy.integrate import trapezoid
 import wrf
 import glob
 import re
@@ -132,7 +132,63 @@ def read_sfc_var(varname, date, year):
     ds = ds.sel(latitude=slice(70, 0), longitude=slice(-179.5, -60.))
     
     return ds
+    
+def calc_IVT_manual(ds):
+    '''
+    Calculate IVT manually (not using scipy.integrate)
+    This is in case you need to remove values below the surface
+    '''
 
+    pressure = ds.isobaricInhPa.values*100 # convert from hPa to Pa
+    dp = np.diff(pressure) # delta pressure
+    g = 9.81 # gravity constant
+    
+    qu_lst = []
+    qv_lst = []
+    # enumerate through pressure levels so we select the layers
+    for i, pres in enumerate(ds.isobaricInhPa.values[:-1]):
+        pres2 = ds.isobaricInhPa.values[i+1]
+        tmp = ds.sel(isobaricInhPa=[pres, pres2]) # select layer
+        tmp = tmp.mean(dim='isobaricInhPa', skipna=True) # average q, u, v in layer
+        # calculate ivtu in layer
+        qu = ((tmp.q.values*tmp.u.values*dp[i])/g)*-1
+        qu_lst.append(qu)
+        # calculate ivtv in layer
+        qv = ((tmp.q.values*tmp.v.values*dp[i])/g)*-1
+        qv_lst.append(qv)
+    
+    ## add up u component of ivt from each layer
+    qu_lst = np.stack(qu_lst, axis=0)
+    ivtu = np.nansum(qu_lst, axis=0)
+    
+    # ## add up v component of ivt from each layer
+    qv_lst = np.stack(qv_lst, axis=0)
+    ivtv = np.nansum(qv_lst, axis=0)
+    
+    ## calculate IVT magnitude
+    ivt = np.sqrt(ivtu**2 + ivtv**2)
+    
+    # put into a new dataset
+    lat = ds.latitude.values
+    lon = ds.longitude.values
+    initialization_date = ds.time.values
+    ts = pd.to_datetime(str(initialization_date)) 
+    d = ts.strftime("%Y/%m/%d %H:%S")
+    
+    var_dict = {'ivtu': (['number', 'step', 'lat', 'lon'], ivtu),
+                'ivtv': (['number', 'step', 'lat', 'lon'], ivtv), 
+                'ivt': (['number', 'step', 'lat', 'lon'], ivt)}
+    new_ds = xr.Dataset(var_dict,
+                    coords={'number': (['number'], ds.number.values),
+                            'step': (['step'], ds.step.values),
+                            'lat': (['lat'], lat),
+                            'lon': (['lon'], lon),
+                            'valid_time': (['step'], ds.valid_time.values)})
+    
+    new_ds = new_ds.assign_attrs(init_time=d)
+    
+    return new_ds
+    
 def calc_IVT(ds):
     '''
     Using xarray and preprocessed grib data, calculate IVT
@@ -147,29 +203,28 @@ def calc_IVT(ds):
     v = ds.v.values # m s-1
     q = ds.q.values # kg kg-1
     g = 9.81 # gravity constant
-    ivtu = (trapz(y=u*q, x=pressure, axis=2)/g)*-1
-    ivtv = (trapz(y=v*q, x=pressure, axis=2)/g)*-1
+    ivtu = (trapezoid(y=u*q, x=pressure, axis=2)/g)*-1
+    ivtv = (trapezoid(y=v*q, x=pressure, axis=2)/g)*-1
     ivt = np.sqrt(ivtu**2 + ivtv**2)
     
-    ## reshape output arrays
-    ninit, ntime, nlat, nlon = ivt.shape
-    ivt = ivt.reshape(ninit*ntime, nlat, nlon)
-    ivtu = ivtu.reshape(ninit*ntime, nlat, nlon)
-    ivtv = ivtv.reshape(ninit*ntime, nlat, nlon)
-    
-    # put into a simple 3D dataset
-    time = ds.valid_time.values
-    time = time.flatten()
+    # put into a new dataset
     lat = ds.latitude.values
     lon = ds.longitude.values
+    initialization_date = ds.time.values
+    ts = pd.to_datetime(str(initialization_date)) 
+    d = ts.strftime("%Y/%m/%d %H:%S")
 
-    var_dict = {'ivtu': (['time', 'lat', 'lon'], ivtu),
-                'ivtv': (['time', 'lat', 'lon'], ivtv), 
-                'ivt': (['time', 'lat', 'lon'], ivt)}
+    var_dict = {'ivtu': (['number', 'step', 'lat', 'lon'], ivtu),
+                'ivtv': (['number', 'step', 'lat', 'lon'], ivtv), 
+                'ivt': (['number', 'step', 'lat', 'lon'], ivt)}
     ds = xr.Dataset(var_dict,
-                    coords={'time': (['time'], time),
+                    coords={'number': (['number'], ds.number.values),
+                            'step': (['step'], ds.step.values),
                             'lat': (['lat'], lat),
-                            'lon': (['lon'], lon)})
+                            'lon': (['lon'], lon),
+                            'valid_time': (['step'], ds.valid_time.values)})
+
+    ds = ds.assign_attrs(init_time=d)
     
     return ds
 

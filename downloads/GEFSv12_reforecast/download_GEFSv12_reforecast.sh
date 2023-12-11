@@ -16,12 +16,12 @@ VARNAME=$4
 ### Variables to download: TODO create another input argument and a IF statement for var_array
 if [ $VARNAME == 'ivt' ]; then
     var_array=(
-    ugrd_pres ## U below 700 mb
-    ugrd_pres_abv700mb ## U above 700 mb
-    vgrd_pres ## V below 700 mb
-    vgrd_pres_abv700mb ## V above 700 mb
-    spfh_pres ## Q below 700 mb
-    spfh_pres_abv700mb ## Q above 700 mb
+    # ugrd_pres ## U below 700 mb
+    # ugrd_pres_abv700mb ## U above 700 mb
+    # vgrd_pres ## V below 700 mb
+    # vgrd_pres_abv700mb ## V above 700 mb
+    # spfh_pres ## Q below 700 mb
+    # spfh_pres_abv700mb ## Q above 700 mb
     pres_sfc ## surface pressure - need this because GEFS puts values below the surface
     )
 elif [ $VARNAME == 'prec' ]; then
