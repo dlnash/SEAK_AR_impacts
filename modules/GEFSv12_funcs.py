@@ -13,6 +13,9 @@ from scipy.integrate import trapezoid
 import wrf
 import glob
 import re
+import dask
+from functools import partial
+dask.config.set(**{'array.slicing.split_large_chunks': True})
 
 def list_of_processed_trackIDs(varname, server):
     '''
@@ -37,24 +40,28 @@ def list_of_processed_trackIDs(varname, server):
 
     return processed_trackIDs
 
-def preprocess(ds):
+def preprocess(ds, start, stop):
     '''keep only the first 24 hours'''
-    return ds.isel(step=slice(0, 8))
+    return ds.isel(step=slice(start, stop))
 
-def fix_GEFSv12_open_mfdataset(fname):
+
+def _preprocess(x, start, stop):
+    return x.isel(step=slice(start, stop))
+    
+def fix_GEFSv12_open_mfdataset(fname, start, stop):
     list_of_files = glob.glob(fname)
     ds_lst = []
     for i, fi in enumerate(list_of_files):
         ds = xr.open_dataset(fi)
         if ds['time'].size > 1:
             ds = ds.isel(time=0)
-        ds = preprocess(ds)
         ds_lst.append(ds)
     ds = xr.concat(ds_lst, dim='number')
+    ds = preprocess(ds, start, stop)
 
     return ds
 
-def read_and_regrid_prs_var(varname, date, year):
+def read_and_regrid_prs_var(varname, date, year, start, stop):
     '''
     Using xarray, reads grib data for given variable for above and below 700 mb
     Regrids the data above 700 mb to same horizontal resolution as data below 700 mb
@@ -69,20 +76,21 @@ def read_and_regrid_prs_var(varname, date, year):
     
     # read data below 700 mb - 0.25 degree
     fname = path_to_data+"{0}_pres_{1}00*.grib2".format(varname, date)
+    partial_func = partial(_preprocess, start=start, stop=stop)
     
     try:
-        ds_below = xr.open_mfdataset(fname, engine='cfgrib', concat_dim="number", combine='by_coords')
+        ds_below = xr.open_mfdataset(fname, engine='cfgrib', concat_dim="number", combine='nested', preprocess=partial_func)
     except ValueError:
-        ds_below = fix_GEFSv12_open_mfdataset(fname)
+        ds_below = fix_GEFSv12_open_mfdataset(fname, start, stop)
         
     ds_below = ds_below.assign_coords({"longitude": (((ds_below.longitude + 180) % 360) - 180)}) # Convert DataArray longitude coordinates from 0-359 to -180-179
     
     # read data above 700 mb - 0.5 degree
     fname = path_to_data+"{0}_pres_abv700mb_{1}00_*.grib2".format(varname, date)
     try:
-        ds_above = xr.open_mfdataset(fname, engine='cfgrib', concat_dim="number", combine='by_coords')
+        ds_above = xr.open_mfdataset(fname, engine='cfgrib', concat_dim="number", combine='nested', preprocess=partial_func)
     except ValueError:
-        ds_above = fix_GEFSv12_open_mfdataset(fname)
+        ds_above = fix_GEFSv12_open_mfdataset(fname, start, stop)
     ds_above = ds_above.assign_coords({"longitude": (((ds_above.longitude + 180) % 360) - 180)}) # Convert DataArray longitude coordinates from 0-359 to -180-179
     
     ## regrid ds_above to same horizontal resolution as ds_below
@@ -100,13 +108,16 @@ def read_and_regrid_prs_var(varname, date, year):
     
     ## concatenate into single ds
     ds = xr.concat([ds_below, ds_above], dim='isobaricInhPa')
+
+    ## now we can delete ds_below and ds_above since we are done with them
+    # del ds_above, ds_below
     
     ## subset to N. America [0, 70, 180, 295]
     ds = ds.sel(latitude=slice(70, 0), longitude=slice(-179.5, -60.))
     
     return ds
 
-def read_sfc_var(varname, date, year):
+def read_sfc_var(varname, date, year, start, stop):
     '''
     Using xarray, reads grib data for given variable for surface level data
     Concatenated along ensemble axis
@@ -119,11 +130,11 @@ def read_sfc_var(varname, date, year):
     
     # read surfaced data
     fname = path_to_data+"{0}_sfc_*.grib2".format(varname) 
-
+    partial_func = partial(_preprocess, start=start, stop=stop)
     try:
-        ds = xr.open_mfdataset(fname, engine='cfgrib', concat_dim="number", combine='by_coords')
+        ds = xr.open_mfdataset(fname, engine='cfgrib', concat_dim="number", combine='nested', preprocess=partial_func)
     except ValueError:
-        ds = fix_GEFSv12_open_mfdataset(fname)
+        ds = fix_GEFSv12_open_mfdataset(fname, start, stop)
 
     ## Back to everyone preprocess
     ds = ds.assign_coords({"longitude": (((ds.longitude + 180) % 360) - 180)}) # Convert DataArray longitude coordinates from 0-359 to -180-179
@@ -151,43 +162,51 @@ def calc_IVT_manual(ds):
         tmp = ds.sel(isobaricInhPa=[pres, pres2]) # select layer
         tmp = tmp.mean(dim='isobaricInhPa', skipna=True) # average q, u, v in layer
         # calculate ivtu in layer
-        qu = ((tmp.q.values*tmp.u.values*dp[i])/g)*-1
+        qu = ((tmp.q*tmp.u*dp[i])/g)*-1
         qu_lst.append(qu)
         # calculate ivtv in layer
-        qv = ((tmp.q.values*tmp.v.values*dp[i])/g)*-1
+        qv = ((tmp.q*tmp.v*dp[i])/g)*-1
         qv_lst.append(qv)
     
     ## add up u component of ivt from each layer
-    qu_lst = np.stack(qu_lst, axis=0)
-    ivtu = np.nansum(qu_lst, axis=0)
+    qu = xr.concat(qu_lst, pd.Index(pressure[:-1], name="pres"))
+    qu = qu.sum('pres')
+    qu.name = 'ivtu'
     
     # ## add up v component of ivt from each layer
-    qv_lst = np.stack(qv_lst, axis=0)
-    ivtv = np.nansum(qv_lst, axis=0)
+    qv = xr.concat(qv_lst, pd.Index(pressure[:-1], name="pres"))
+    qv = qv.sum('pres')
+    qv.name = 'ivtv'
     
     ## calculate IVT magnitude
-    ivt = np.sqrt(ivtu**2 + ivtv**2)
+    ivt = np.sqrt(qu**2 + qv**2)
+    ivt.name = 'ivt'
+
+    ds = xr.merge([qu, qv, ivt])
     
-    # put into a new dataset
-    lat = ds.latitude.values
-    lon = ds.longitude.values
-    initialization_date = ds.time.values
-    ts = pd.to_datetime(str(initialization_date)) 
-    d = ts.strftime("%Y/%m/%d %H:%S")
+    # # put into a new dataset
+    # lat = ds.latitude.values
+    # lon = ds.longitude.values
+    # step = ds.step.values
+    # number = ds.number.values
+    # valid_times = ds.valid_time.values
+    # initialization_date = ds.time.values
+    # ts = pd.to_datetime(str(initialization_date)) 
+    # d = ts.strftime("%Y/%m/%d %H:%S")
     
-    var_dict = {'ivtu': (['number', 'step', 'lat', 'lon'], ivtu),
-                'ivtv': (['number', 'step', 'lat', 'lon'], ivtv), 
-                'ivt': (['number', 'step', 'lat', 'lon'], ivt)}
-    new_ds = xr.Dataset(var_dict,
-                    coords={'number': (['number'], ds.number.values),
-                            'step': (['step'], ds.step.values),
-                            'lat': (['lat'], lat),
-                            'lon': (['lon'], lon),
-                            'valid_time': (['step'], ds.valid_time.values)})
+    # var_dict = {'ivtu': (['number', 'step', 'lat', 'lon'], qu),
+    #             'ivtv': (['number', 'step', 'lat', 'lon'], qv), 
+    #             'ivt': (['number', 'step', 'lat', 'lon'], ivt)}
+    # ds = xr.Dataset(var_dict,
+    #                 coords={'number': (['number'], number),
+    #                         'step': (['step'], step),
+    #                         'lat': (['lat'], lat),
+    #                         'lon': (['lon'], lon),
+    #                         'valid_time': (['step'], valid_times)})
     
-    new_ds = new_ds.assign_attrs(init_time=d)
+    # ds = ds.assign_attrs(init_time=d)
     
-    return new_ds
+    return ds
     
 def calc_IVT(ds):
     '''

@@ -27,34 +27,45 @@ year = ddict['year']
 date = ddict['date']
 variable = 'ivt' ## can be 'ivt', 'freezing_level', or 'prec'
 
-if variable == 'ivt':
-    print('Loading u, v, and q data ....')
-    varname_lst = ['ugrd', 'vgrd', 'spfh']
-    ds_lst = []
-    for i, varname in enumerate(varname_lst):
-        ds = gefs.read_and_regrid_prs_var(varname, date, year)
-        ds_lst.append(ds)
+for i, st in enumerate(range(0, 80, 8)):
+    print(st, st+8)
+    start = st
+    stop = st+8
     
-    ## load in surface pressure
-    print('Loading surface pressure data ....')
-    ds_pres = gefs.read_sfc_var('pres', date, year)
-    ds_lst.append(ds_pres)
+    if variable == 'ivt':
+        print('Loading u, v, and q data ....')
+        varname_lst = ['ugrd', 'vgrd', 'spfh']
+        ds_lst = []
+        for i, varname in enumerate(varname_lst):
+            ds = gefs.read_and_regrid_prs_var(varname, date, year, start, stop)
+            ds_lst.append(ds)
+        
+        ## load in surface pressure
+        print('Loading surface pressure data ....')
+        ds_pres = gefs.read_sfc_var('pres', date, year, start, stop)
+        ds_lst.append(ds_pres)
+        
+        ds = xr.merge(ds_lst) # merge u, v, and q into single ds
+        ds = ds.sel(isobaricInhPa=slice(300, 1000))
+        ds = ds.reindex(isobaricInhPa=ds.isobaricInhPa[::-1])
+        
+        ## mask values below surface pressure
+        print('Masking values below surface ....')
+        varlst = ['q', 'u', 'v']
+        for i, varname in enumerate(varlst):
+            ds[varname] = ds[varname].where(ds[varname].isobaricInhPa < ds.sp/100., drop=False)
+        
+        ## integrate to calculate IVT
+        print('Calculating IVT ....')
+        ds_IVT = gefs.calc_IVT_manual(ds) # calculate IVT
     
-    ds = xr.merge(ds_lst) # merge u, v, and q into single ds
-    ds = ds.sel(isobaricInhPa=slice(300, 1000))
-    ds = ds.reindex(isobaricInhPa=ds.isobaricInhPa[::-1])
+        # get info for saving file
+        start = ds_IVT.step.values[0].astype('timedelta64[h]')
+        stop = ds_IVT.step.values[-1].astype('timedelta64[h]')
+        start = int(start / np.timedelta64(1, 'h'))
+        stop = int(stop / np.timedelta64(1, 'h'))
     
-    ## mask values below surface pressure
-    print('Masking values below surface ....')
-    varlst = ['q', 'u', 'v']
-    for i, varname in enumerate(varlst):
-        ds[varname] = ds[varname].where(ds[varname].isobaricInhPa < ds.sp/100., drop=False)
-    
-    ## integrate to calculate IVT
-    print('Calculating IVT ....')
-    ds_IVT = gefs.calc_IVT_manual(ds) # calculate IVT
-
-    ## save IVT data to netCDF file
-    print('Writing {0} to netCDF ....'.format(date))
-    out_fname = path_to_data + 'preprocessed/GEFSv12_reforecast/ivt/{0}_ivt.nc'.format(date)
-    ds_IVT.to_netcdf(path=out_fname, mode = 'w', format='NETCDF4')
+        ## save IVT data to netCDF file
+        print('Writing {0} to netCDF ....'.format(date))
+        out_fname = path_to_data + 'preprocessed/GEFSv12_reforecast/ivt/{0}_ivt_F{1}_F{2}.nc'.format(date, start, stop) 
+        ds_IVT.load().to_netcdf(path=out_fname, mode = 'w', format='NETCDF4')

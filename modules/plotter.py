@@ -12,16 +12,21 @@ import matplotlib.pyplot as plt
 import cartopy.crs as ccrs
 import cartopy.feature as cfeature
 from cartopy.mpl.gridliner import LONGITUDE_FORMATTER, LATITUDE_FORMATTER
-from cartopy.mpl.ticker import (LongitudeFormatter, LatitudeFormatter,
-                                LatitudeLocator, LongitudeLocator)
 import matplotlib.ticker as mticker
 import colorsys
 from matplotlib.colors import LinearSegmentedColormap # Linear interpolation for color maps
 import matplotlib.patches as mpatches
 import matplotlib.animation as animation
+from mpl_toolkits.axes_grid1.inset_locator import inset_axes
+from matplotlib.projections import get_projection_class
 import pandas as pd
 import matplotlib.gridspec as gridspec
 import seaborn as sns
+import cmocean.cm as cmo
+
+# Import my modules
+sys.path.append('../modules') # Path to modules
+from constants import ucsd_colors
 
 def draw_basemap(ax, datacrs=ccrs.PlateCarree(), extent=None, xticks=None, yticks=None, grid=False, left_lats=True, right_lats=False, bottom_lons=True, mask_ocean=False, coastline=True):
     """
@@ -68,7 +73,7 @@ def draw_basemap(ax, datacrs=ccrs.PlateCarree(), extent=None, xticks=None, ytick
     - Alpha sets transparency (0 is transparent, 1 is solid)
     
     """
-    kw_ticks = {'labelsize': 8., 'colors': 'gray'}
+
     # Use map projection (CRS) of the given Axes
     mapcrs = ax.projection    
     
@@ -78,9 +83,6 @@ def draw_basemap(ax, datacrs=ccrs.PlateCarree(), extent=None, xticks=None, ytick
         ax.set_global()
         extent = [-180., 180., -90., 90.]
     # If extent is given, set map extent to lat/lon bounding box
-    elif extent[0] > extent[1]:
-        extent = [extent[0]%360, extent[1]%360, extent[2], extent[3]]
-        ax.set_extent(extent, crs=datacrs)
     else:
         ax.set_extent(extent, crs=datacrs)
     
@@ -102,18 +104,18 @@ def draw_basemap(ax, datacrs=ccrs.PlateCarree(), extent=None, xticks=None, ytick
                       linewidth=.5, color='black', alpha=0.5, linestyle='--')
         
     else:
-        # apply tick parameters
-        ax.set_xticks(xticks, crs=datacrs)
-        ax.set_yticks(yticks, crs=datacrs)
-        lon_formatter = LongitudeFormatter(zero_direction_label=True)
-        lat_formatter = LatitudeFormatter()
-        ax.xaxis.set_major_formatter(lon_formatter)
-        ax.yaxis.set_major_formatter(lat_formatter)
-        
-        gl = ax.gridlines(crs=datacrs, draw_labels=False,
-                  linewidth=0.5, color='black', alpha=0.5, linestyle='--')
-
-        ax.tick_params(axis='both', **kw_ticks)
+        gl = ax.gridlines(crs=datacrs, draw_labels=True,
+                      linewidth=.5, color='black', alpha=0.5, linestyle='--')
+        gl.top_labels = False
+        gl.left_labels = left_lats
+        gl.right_labels = right_lats
+        gl.bottom_labels = bottom_lons
+        gl.xlocator = mticker.FixedLocator(xticks)
+        gl.ylocator = mticker.FixedLocator(yticks)
+        gl.xformatter = LONGITUDE_FORMATTER
+        gl.yformatter = LATITUDE_FORMATTER
+        gl.xlabel_style = {'size': 10, 'color': 'gray', 'fontweight': 'light'}
+        gl.ylabel_style = {'size': 10, 'color': 'gray', 'fontweight': 'light'}
     
     ## Gridlines
     # Draw gridlines if requested
@@ -131,9 +133,6 @@ def draw_basemap(ax, datacrs=ccrs.PlateCarree(), extent=None, xticks=None, ytick
                    length=4, 
                    pad=2, 
                    color='black')
-    
-    
-    
     
     return ax
 
@@ -492,57 +491,3 @@ def create_animation(DS, var1, var2, var3, clevs1, clevs2, clevs3, cmap1, cmap2,
     ani.save(long_name + ".gif", writer='imagemagick', fps=10)
     
     return filename
-
-##'''from https://stackoverflow.com/questions/35042255/how-to-plot-multiple-seaborn-jointplot-in-subplot'''
-class SeabornFig2Grid():
-
-    def __init__(self, seaborngrid, fig,  subplot_spec):
-        self.fig = fig
-        self.sg = seaborngrid
-        self.subplot = subplot_spec
-        if isinstance(self.sg, sns.axisgrid.FacetGrid) or \
-            isinstance(self.sg, sns.axisgrid.PairGrid):
-            self._movegrid()
-        elif isinstance(self.sg, sns.axisgrid.JointGrid):
-            self._movejointgrid()
-        self._finalize()
-
-    def _movegrid(self):
-        """ Move PairGrid or Facetgrid """
-        self._resize()
-        n = self.sg.axes.shape[0]
-        m = self.sg.axes.shape[1]
-        self.subgrid = gridspec.GridSpecFromSubplotSpec(n,m, subplot_spec=self.subplot)
-        for i in range(n):
-            for j in range(m):
-                self._moveaxes(self.sg.axes[i,j], self.subgrid[i,j])
-
-    def _movejointgrid(self):
-        """ Move Jointgrid """
-        h= self.sg.ax_joint.get_position().height
-        h2= self.sg.ax_marg_x.get_position().height
-        r = int(np.round(h/h2))
-        self._resize()
-        self.subgrid = gridspec.GridSpecFromSubplotSpec(r+1,r+1, subplot_spec=self.subplot)
-
-        self._moveaxes(self.sg.ax_joint, self.subgrid[1:, :-1])
-        self._moveaxes(self.sg.ax_marg_x, self.subgrid[0, :-1])
-        self._moveaxes(self.sg.ax_marg_y, self.subgrid[1:, -1])
-
-    def _moveaxes(self, ax, gs):
-        #https://stackoverflow.com/a/46906599/4124317
-        ax.remove()
-        ax.figure=self.fig
-        self.fig.axes.append(ax)
-        self.fig.add_axes(ax)
-        ax._subplotspec = gs
-        ax.set_position(gs.get_position(self.fig))
-        ax.set_subplotspec(gs)
-
-    def _finalize(self):
-        plt.close(self.sg.fig)
-        self.fig.canvas.mpl_connect("resize_event", self._resize)
-        self.fig.canvas.draw()
-
-    def _resize(self, evt=None):
-        self.sg.fig.set_size_inches(self.fig.get_size_inches())
