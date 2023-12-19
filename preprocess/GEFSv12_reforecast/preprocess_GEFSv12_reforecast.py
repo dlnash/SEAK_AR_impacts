@@ -10,6 +10,7 @@
 import os, sys
 import yaml
 import xarray as xr
+import numpy as np
 
 path_to_repo = '/cw3e/mead/projects/cwp140/scratch/dnash/repos/SEAK_AR_impacts/'
 sys.path.append(path_to_repo+'modules')

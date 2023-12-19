@@ -11,4 +11,5 @@
 /out/*
 /downloads/GEFSv12_reforecast/slurm_out/*
 /preprocess/GEFSv12_reforecast/slurm_out/*
+/preprocess/calculate_mclimate/slurm_out/*
 /preprocess/slurm_out/*
