@@ -46,6 +46,8 @@ def preprocess(ds, start, stop):
 
 
 def _preprocess(x, start, stop):
+    if x['time'].size > 1:
+            x = x.isel(time=0)
     return x.isel(step=slice(start, stop))
     
 def fix_GEFSv12_open_mfdataset(fname, start, stop):
@@ -55,10 +57,36 @@ def fix_GEFSv12_open_mfdataset(fname, start, stop):
         ds = xr.open_dataset(fi)
         if ds['time'].size > 1:
             ds = ds.isel(time=0)
+        
         ds_lst.append(ds)
-    ds = xr.concat(ds_lst, dim='number')
-    ds = preprocess(ds, start, stop)
 
+    ## get max step size
+    step_size_lst = []
+    for i, ds in enumerate(ds_lst):
+        step_size_lst.append(ds.step.size)
+    max_size = max(step_size_lst)
+    max_index = step_size_lst.index(max(step_size_lst))
+    max_time = ds_lst[max_index].valid_time.values
+    max_ds = ds_lst[max_index]
+    ## now loop through and fill ds where smaller than max size
+    new_ds_lst = []
+    for i, tmp in enumerate(ds_lst):
+        if tmp.step.size < max_size:
+            new_ds = tmp.reindex_like(max_ds, method='nearest', fill_value=np.nan)
+            # new_ds = new_ds.drop_dims("valid_time")
+            new_ds = new_ds.assign_coords(valid_time=("step", max_time))
+            new_ds = preprocess(new_ds, start, stop)
+            # new_ds = ds.expand_dims("valid_time").assign_coords(valid_time=max_time)
+            # new_ds = ds.update({"valid_time": max_time})
+            # ds1, new_ds = xr.align(ds_above[max_index], ds, join="left")
+            new_ds_lst.append(new_ds)
+    
+        elif ds.step.size == max_size:
+            ds = preprocess(ds, start, stop)
+            new_ds_lst.append(ds)
+        
+    ds = xr.concat(new_ds_lst, dim="number")
+    
     return ds
 
 def read_and_regrid_prs_var(varname, date, year, start, stop):
@@ -82,6 +110,8 @@ def read_and_regrid_prs_var(varname, date, year, start, stop):
         ds_below = xr.open_mfdataset(fname, engine='cfgrib', concat_dim="number", combine='nested', preprocess=partial_func)
     except ValueError:
         ds_below = fix_GEFSv12_open_mfdataset(fname, start, stop)
+    except TypeError:
+        ds_below = fix_GEFSv12_open_mfdataset(fname, start, stop)
         
     ds_below = ds_below.assign_coords({"longitude": (((ds_below.longitude + 180) % 360) - 180)}) # Convert DataArray longitude coordinates from 0-359 to -180-179
     
@@ -89,8 +119,12 @@ def read_and_regrid_prs_var(varname, date, year, start, stop):
     fname = path_to_data+"{0}_pres_abv700mb_{1}00_*.grib2".format(varname, date)
     try:
         ds_above = xr.open_mfdataset(fname, engine='cfgrib', concat_dim="number", combine='nested', preprocess=partial_func)
+    except TypeError:
+        ds_above = fix_GEFSv12_open_mfdataset(fname, start, stop)
     except ValueError:
         ds_above = fix_GEFSv12_open_mfdataset(fname, start, stop)
+    
+        
     ds_above = ds_above.assign_coords({"longitude": (((ds_above.longitude + 180) % 360) - 180)}) # Convert DataArray longitude coordinates from 0-359 to -180-179
     
     ## regrid ds_above to same horizontal resolution as ds_below

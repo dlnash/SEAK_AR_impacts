@@ -62,6 +62,10 @@ for i, yr in enumerate(range(2000, 2020)):
     
 ## concatenate all years together into single list    
 final_lst = np.concatenate(date_lst)
+## remove dates outside GEFSv12 Reforecast
+idx = (pd.DatetimeIndex(final_lst).year < 2020) & (pd.DatetimeIndex(final_lst).year >= 2000)
+final_lst = final_lst[idx]
+
 print(start_date, end_date)
 
 ## load all days from the new subset
