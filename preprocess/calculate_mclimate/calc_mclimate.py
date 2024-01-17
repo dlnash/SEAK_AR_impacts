@@ -17,7 +17,7 @@ import dask
 from datetime import timedelta
 
 dask.config.set(**{'array.slicing.split_large_chunks': True})
-path_to_data = '/cw3e/mead/projects/cwp140/scratch/dnash/data/'      # project data -- read only
+path_to_data = '/expanse/nfs/cw3e/cwp140/'     # project data -- read only
 
 config_file = str(sys.argv[1]) # this is the config file name
 job_info = str(sys.argv[2]) # this is the job name
@@ -52,7 +52,7 @@ for i, yr in enumerate(range(2000, 2020)):
     center_date = pd.to_datetime(center_date)
     start_date = center_date - timedelta(days=45)
     
-    ## get 45 days after November 21
+    ## get 45 days after center date
     end_date = center_date + timedelta(days=45)
 
     ## make a list of dates between start_date and end_date
@@ -71,9 +71,7 @@ print(start_date, end_date)
 ## load all days from the new subset
 ## create list of fnames
 fname_lst = []
-path_to_data = '/data/projects/Comet/cwp140/'
-path_to_data = '/cw3e/mead/projects/cwp140/scratch/dnash/data/'
-varname = 'ivt'
+varname = 'uv1000' ## ivt, uv1000
 
 ## append filenames to a list
 print('Gathering filenames ...')
@@ -81,6 +79,10 @@ for i, dt in enumerate(final_lst):
     ts = pd.to_datetime(str(dt)) 
     d = ts.strftime("%Y%m%d")
     F1, F2 = get_filename_GEFSv12_reforecast(F)
+    if varname == 'uv1000': ## small hack to fix mistake - will go back and rerun preprocess GEFS after AMS
+        F1 = F1 / 3.
+        F2 = F2 / 3.
+    
     fname = path_to_data + 'preprocessed/GEFSv12_reforecast/{0}/{1}_{0}_F{2}_F{3}.nc'.format(varname, d, F1, F2)
     fname_lst.append(fname)
 
@@ -90,14 +92,27 @@ print('Reading the data ...')
 ## this is the index value for selecting the timestep in the dataset
 idx = np.timedelta64(int(np.timedelta64(F, 'h')/np.timedelta64(1, 'ns')), 'ns')
 
-def preprocess(ds):
+def preprocess_ivt(ds):
     ds = ds.drop_vars(["ivtu", "ivtv"])
     ds = ds.sel(step=idx) # select the 24 hr lead step
     
     return ds
 
-## use xr.open_mfdataset to read all the files within that ssn clim
-ds = xr.open_mfdataset(fname_lst, concat_dim="valid_time", combine="nested", engine='netcdf4', chunks={"lat": 100, "lon": 100}, preprocess=preprocess)
+def preprocess_uv1000(ds):
+    uv = np.sqrt(ds.u**2 + ds.v**2)
+    ds = ds.assign(uv=(['lat','lon'],uv))
+    ds = ds.drop_vars(["u", "v"])
+    ds = ds.sel(step=idx) # select the 24 hr lead step
+    
+    return ds
+
+if varname == 'ivt':
+    ## use xr.open_mfdataset to read all the files within that ssn clim
+    ds = xr.open_mfdataset(fname_lst, concat_dim="valid_time", combine="nested", engine='netcdf4', chunks={"lat": 100, "lon": 100}, preprocess=preprocess_ivt)
+
+if varname == 'uv1000':
+    ## use xr.open_mfdataset to read all the files within that ssn clim
+    ds = xr.open_mfdataset(fname_lst, concat_dim="valid_time", combine="nested", engine='netcdf4', chunks={"lat": 100, "lon": 100}, preprocess=preprocess_uv1000)
 
 print('Calculating quantiles...')
 ## need to rechunk so time is a single chunk
@@ -110,16 +125,15 @@ b = np.arange(.91, 1.001, 0.01)
 quantile_arr = np.concatenate((a, b), axis=0)
 
 ## Calculate the percentiles
-ivt_mclimate = ds.quantile(quantile_arr, dim=['valid_time', 'number'], skipna=True)
+mclimate = ds.quantile(quantile_arr, dim=['valid_time', 'number'], skipna=True)
 
 ## add dayofyear and lead to coordinates
-ivt_mclimate = ivt_mclimate.assign_coords(step=F)
-ivt_mclimate = ivt_mclimate.expand_dims('step')
+mclimate = mclimate.assign_coords(step=F)
+mclimate = mclimate.expand_dims('step')
 period = pd.Period("2023-{0}-{1}".format(mon, day), freq='H')
-ivt_mclimate = ivt_mclimate.assign_coords(dayofyear=period.day_of_year)
-ivt_mclimate = ivt_mclimate.expand_dims('dayofyear')
-ivt_mclimate
+mclimate = mclimate.assign_coords(dayofyear=period.day_of_year)
+mclimate = mclimate.expand_dims('dayofyear')
 
 # write to netCDF
-fname = os.path.join(path_to_data, 'preprocessed/mclimate/GEFSv12_reforecast_mclimate_ivt_{0}{1}_{2}hr-lead.nc'.format(mon, day, F))
-ivt_mclimate.load().to_netcdf(path=fname, mode = 'w', format='NETCDF4')
+fname = os.path.join(path_to_data, 'preprocessed/mclimate/GEFSv12_reforecast_mclimate_{3}_{0}{1}_{2}hr-lead.nc'.format(mon, day, F, varname))
+mclimate.load().to_netcdf(path=fname, mode = 'w', format='NETCDF4')

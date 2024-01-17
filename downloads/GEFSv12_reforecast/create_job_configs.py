@@ -45,7 +45,6 @@ for i, date in enumerate(final_lst):
     d = {'job_{0}'.format(jobcounter):
          {'year': yr,
           'date': dt,
-          'ens': 'p01' ## 'c00', 'p01', 'p02', 'p03', 'p04'
           }}
     d_lst.append(d)
     

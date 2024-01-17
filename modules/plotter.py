@@ -73,18 +73,14 @@ def draw_basemap(ax, datacrs=ccrs.PlateCarree(), extent=None, xticks=None, ytick
     - Alpha sets transparency (0 is transparent, 1 is solid)
     
     """
+    ## some style dictionaries
+    kw_ticklabels = {'size': 10, 'color': 'dimgray', 'weight': 'light'}
+    kw_grid = {'linewidth': .5, 'color': 'k', 'linestyle': '--', 'alpha': 0.4}
+    kw_ticks = {'length': 4, 'width': 0.5, 'pad': 2, 'color': 'black',
+                         'labelsize': 10, 'labelcolor': 'dimgray'}
 
     # Use map projection (CRS) of the given Axes
     mapcrs = ax.projection    
-    
-    ## Map Extent
-    # If no extent is given, use global extent
-    if extent is None:        
-        ax.set_global()
-        extent = [-180., 180., -90., 90.]
-    # If extent is given, set map extent to lat/lon bounding box
-    else:
-        ax.set_extent(extent, crs=datacrs)
     
     # Add map features (continents and country borders)
     ax.add_feature(cfeature.LAND, facecolor='0.9')      
@@ -104,8 +100,7 @@ def draw_basemap(ax, datacrs=ccrs.PlateCarree(), extent=None, xticks=None, ytick
                       linewidth=.5, color='black', alpha=0.5, linestyle='--')
         
     else:
-        gl = ax.gridlines(crs=datacrs, draw_labels=True,
-                      linewidth=.5, color='black', alpha=0.5, linestyle='--')
+        gl = ax.gridlines(crs=datacrs, draw_labels=True, **kw_grid)
         gl.top_labels = False
         gl.left_labels = left_lats
         gl.right_labels = right_lats
@@ -114,8 +109,8 @@ def draw_basemap(ax, datacrs=ccrs.PlateCarree(), extent=None, xticks=None, ytick
         gl.ylocator = mticker.FixedLocator(yticks)
         gl.xformatter = LONGITUDE_FORMATTER
         gl.yformatter = LATITUDE_FORMATTER
-        gl.xlabel_style = {'size': 10, 'color': 'gray', 'fontweight': 'light'}
-        gl.ylabel_style = {'size': 10, 'color': 'gray', 'fontweight': 'light'}
+        gl.xlabel_style = kw_ticklabels
+        gl.ylabel_style = kw_ticklabels
     
     ## Gridlines
     # Draw gridlines if requested
@@ -127,12 +122,21 @@ def draw_basemap(ax, datacrs=ccrs.PlateCarree(), extent=None, xticks=None, ytick
         gl.ylines = False
             
 
-    # apply tick parameters    
-    ax.tick_params(direction='out', 
-                   labelsize=10, 
-                   length=4, 
-                   pad=2, 
-                   color='black')
+    # apply tick parameters
+    ax.set_xticks(xticks, crs=datacrs)
+    ax.set_yticks(yticks, crs=datacrs)
+    plt.yticks(color='w', size=1) # hack: make the ytick labels white so the ticks show up but not the labels
+    plt.xticks(color='w', size=1) # hack: make the ytick labels white so the ticks show up but not the labels
+    ax.ticklabel_format(axis='both', style='plain')
+
+    ## Map Extent
+    # If no extent is given, use global extent
+    if extent is None:        
+        ax.set_global()
+        extent = [-180., 180., -90., 90.]
+    # If extent is given, set map extent to lat/lon bounding box
+    else:
+        ax.set_extent(extent, crs=datacrs)
     
     return ax
 
@@ -491,3 +495,26 @@ def create_animation(DS, var1, var2, var3, clevs1, clevs2, clevs3, cmap1, cmap2,
     ani.save(long_name + ".gif", writer='imagemagick', fps=10)
     
     return filename
+
+def get_every_other_vector(x):
+    '''
+    stagger matrix setting values to diagonal
+    based on https://www.w3resource.com/python-exercises/numpy/basic/numpy-basic-exercise-30.php
+
+    Parameters
+    ----------
+    x : 2-D array
+
+    Returns
+    -------
+    x : 2-D array
+    same array as input but with the values staggered
+    [[ 1.  0.  1.  0.]
+     [ 0.  1.  0.  1.]
+     [ 1.  0.  1.  0.]
+     [ 0.  1.  0.  1.]]
+    '''
+    x[::2, 1::2] = 0
+    x[1::2, ::2] = 0
+
+    return x

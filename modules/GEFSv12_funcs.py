@@ -10,7 +10,7 @@ import pandas as pd
 import xarray as xr
 from datetime import timedelta
 from scipy.integrate import trapezoid
-import wrf
+# import wrf
 import glob
 import re
 import dask
@@ -41,7 +41,7 @@ def list_of_processed_trackIDs(varname, server):
     return processed_trackIDs
 
 def preprocess(ds, start, stop):
-    '''keep only the first 24 hours'''
+    '''keep only selected time step hours'''
     return ds.isel(step=slice(start, stop))
 
 
@@ -81,9 +81,9 @@ def fix_GEFSv12_open_mfdataset(fname, start, stop):
             # ds1, new_ds = xr.align(ds_above[max_index], ds, join="left")
             new_ds_lst.append(new_ds)
     
-        elif ds.step.size == max_size:
-            ds = preprocess(ds, start, stop)
-            new_ds_lst.append(ds)
+        elif tmp.step.size == max_size:
+            new_ds = preprocess(tmp, start, stop)
+            new_ds_lst.append(new_ds)
         
     ds = xr.concat(new_ds_lst, dim="number")
     
@@ -100,7 +100,7 @@ def read_and_regrid_prs_var(varname, date, year, start, stop):
         xarray dataset of variable at 0.25 degree horizontal resolution at all given pressure levels
     '''
     
-    path_to_data = '/cw3e/mead/projects/cwp140/scratch/dnash/data/downloads/GEFSv12_reforecast/{0}/'.format(date) 
+    path_to_data = '/expanse/nfs/cw3e/cwp140/downloads/GEFSv12_reforecast/{0}/'.format(date) 
     
     # read data below 700 mb - 0.25 degree
     fname = path_to_data+"{0}_pres_{1}00*.grib2".format(varname, date)
@@ -160,14 +160,15 @@ def read_sfc_var(varname, date, year, start, stop):
         xarray dataset of variable at 0.25 degree horizonal resolution for all times
     '''
     
-    path_to_data = '/cw3e/mead/projects/cwp140/scratch/dnash/data/downloads/GEFSv12_reforecast/{0}/'.format(date)
+    path_to_data = '/expanse/nfs/cw3e/cwp140/downloads/GEFSv12_reforecast/{0}/'.format(date)
     
     # read surfaced data
-    fname = path_to_data+"{0}_sfc_*.grib2".format(varname) 
+    fname = path_to_data+"{0}_{1}00*.grib2".format(varname, date) 
     partial_func = partial(_preprocess, start=start, stop=stop)
     try:
         ds = xr.open_mfdataset(fname, engine='cfgrib', concat_dim="number", combine='nested', preprocess=partial_func)
     except ValueError:
+        print('Trying other option')
         ds = fix_GEFSv12_open_mfdataset(fname, start, stop)
 
     ## Back to everyone preprocess

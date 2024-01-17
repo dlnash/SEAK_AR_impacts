@@ -12,11 +12,11 @@ import yaml
 import xarray as xr
 import numpy as np
 
-path_to_repo = '/cw3e/mead/projects/cwp140/scratch/dnash/repos/SEAK_AR_impacts/'
+path_to_repo = '/home/dnash/repos/SEAK_AR_impacts/'
 sys.path.append(path_to_repo+'modules')
 import GEFSv12_funcs as gefs
 
-path_to_data = '/cw3e/mead/projects/cwp140/scratch/dnash/data/'
+path_to_data = '/expanse/nfs/cw3e/cwp140/'
 
 config_file = str(sys.argv[1]) # this is the config file name
 job_info = str(sys.argv[2]) # this is the job name
@@ -26,7 +26,7 @@ ddict = config[job_info] # pull the job info from the dict
 
 year = ddict['year']
 date = ddict['date']
-variable = 'ivt' ## can be 'ivt', 'freezing_level', or 'prec'
+variable = 'uv1000' ## can be 'ivt', 'freezing_level', or 'uv1000'
 
 for i, st in enumerate(range(0, 80, 8)):
     print(st, st+8)
@@ -43,7 +43,7 @@ for i, st in enumerate(range(0, 80, 8)):
         
         ## load in surface pressure
         print('Loading surface pressure data ....')
-        ds_pres = gefs.read_sfc_var('pres', date, year, start, stop)
+        ds_pres = gefs.read_sfc_var('pres_sfc', date, year, start, stop)
         ds_lst.append(ds_pres)
         
         ds = xr.merge(ds_lst) # merge u, v, and q into single ds
@@ -68,5 +68,28 @@ for i, st in enumerate(range(0, 80, 8)):
     
         ## save IVT data to netCDF file
         print('Writing {0} to netCDF ....'.format(date))
-        out_fname = path_to_data + 'preprocessed/GEFSv12_reforecast/ivt/{0}_ivt_F{1}_F{2}.nc'.format(date, start, stop) 
+        out_fname = path_to_data + 'preprocessed/GEFSv12_reforecast/{3}/{0}_{3}_F{1}_F{2}.nc'.format(date, start, stop, variable) 
         ds_IVT.load().to_netcdf(path=out_fname, mode = 'w', format='NETCDF4')
+
+    if variable == 'uv1000':
+        print('Loading u and v data ....')
+        varname_lst = ['ugrd_pres', 'vgrd_pres']
+        ds_lst = []
+        
+        for i, varname in enumerate(varname_lst):
+            ds = gefs.read_sfc_var(varname, date, year, start, stop)
+            ds = ds.sel(isobaricInhPa=1000.)
+            ds_lst.append(ds)
+            
+        ds = xr.merge(ds_lst) # merge u and v into single ds
+
+        # get info for saving file
+        start = ds.step.values[0].astype('timedelta64[h]')
+        stop = ds.step.values[-1].astype('timedelta64[h]')
+        start = int(start / np.timedelta64(1, 'h'))
+        stop = int(stop / np.timedelta64(1, 'h'))
+
+        ## save uv1000 data to netCDF file
+        print('Writing {0} to netCDF ....'.format(date))
+        out_fname = path_to_data + 'preprocessed/GEFSv12_reforecast/{3}/{0}_{3}_F{1}_F{2}.nc'.format(date, start, stop, variable) 
+        ds.load().to_netcdf(path=out_fname, mode = 'w', format='NETCDF4')
