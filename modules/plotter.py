@@ -8,6 +8,7 @@ Description: Functions for plotting
 
 import os, sys
 import numpy as np
+import xarray as xr
 import matplotlib.pyplot as plt
 import cartopy.crs as ccrs
 import cartopy.feature as cfeature
@@ -28,6 +29,17 @@ import cmocean.cm as cmo
 sys.path.append('../modules') # Path to modules
 from constants import ucsd_colors
 
+def plot_terrain(ax, ext):
+    fname = '/expanse/nfs/cw3e/cwp140/downloads/ETOPO1_Bed_c_gmt4.grd'
+    datacrs = ccrs.PlateCarree()
+    grid = xr.open_dataset(fname)
+    grid = grid.where(grid.z > 0) # mask below sea level
+    grid = grid.sel(x=slice(ext[0], ext[1]), y=slice(ext[2], ext[3]))
+    cs = ax.pcolormesh(grid.x, grid.y, grid.z,
+                        cmap=cmo.gray_r, transform=datacrs, alpha=0.7)
+    
+    return ax
+    
 def draw_basemap(ax, datacrs=ccrs.PlateCarree(), extent=None, xticks=None, yticks=None, grid=False, left_lats=True, right_lats=False, bottom_lons=True, mask_ocean=False, coastline=True):
     """
     Creates and returns a background map on which to plot data. 

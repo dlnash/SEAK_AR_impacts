@@ -79,9 +79,6 @@ for i, dt in enumerate(final_lst):
     ts = pd.to_datetime(str(dt)) 
     d = ts.strftime("%Y%m%d")
     F1, F2 = get_filename_GEFSv12_reforecast(F)
-    if varname == 'uv1000': ## small hack to fix mistake - will go back and rerun preprocess GEFS after AMS
-        F1 = F1 / 3.
-        F2 = F2 / 3.
     
     fname = path_to_data + 'preprocessed/GEFSv12_reforecast/{0}/{1}_{0}_F{2}_F{3}.nc'.format(varname, d, F1, F2)
     fname_lst.append(fname)
@@ -100,7 +97,7 @@ def preprocess_ivt(ds):
 
 def preprocess_uv1000(ds):
     uv = np.sqrt(ds.u**2 + ds.v**2)
-    ds = ds.assign(uv=(['lat','lon'],uv))
+    ds = ds.assign(uv=(['number', 'step', 'lat','lon'],uv.data))
     ds = ds.drop_vars(["u", "v"])
     ds = ds.sel(step=idx) # select the 24 hr lead step
     
