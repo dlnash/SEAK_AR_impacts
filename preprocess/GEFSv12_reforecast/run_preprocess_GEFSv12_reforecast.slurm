@@ -17,5 +17,5 @@
 source /home/${USER}/.bashrc
 source activate SEAK-impacts
  
-linevar=`sed $SLURM_ARRAY_TASK_ID'q;d' calls_2.txt`
+linevar=`sed $SLURM_ARRAY_TASK_ID'q;d' calls_1.txt`
 eval $linevar

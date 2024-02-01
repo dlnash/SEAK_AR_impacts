@@ -10,12 +10,16 @@ ASOS/COOP precipitation gauge data from 2002 is available at [https://mesowest.u
 
 3. Download the Global Ensemble Forecast System Version 12: Reforecast Data
 
-TODO: Add framework for downloading/preprocessing GEFSv12 Reforecast. Variables include Total Precipitation (apcp_sfc), Precipitable Water (pwat_eatm), U (ugrd_pres, ugrd_pres_abv700mb), V (vgrd_pres, vgrd_pres_abv700mb), T (tmp_pres, tmp_pres_abv700mb), and Q (spfh_pres, spfh_pres_abv700mb). Script will access data via AWS for the duration of each AR event.
+Variables included in the download are U (ugrd_pres, ugrd_pres_abv700mb), V (vgrd_pres, vgrd_pres_abv700mb), and Q (spfh_pres, spfh_pres_abv700mb) for IVT. For freezing level, variables included in the download are T (tmp_pres, tmp_pres_abv700mb) and Z (hgt_pres, hgt_pres_abv700mb). Script will access Day 1-10 reforecast data via AWS for every day of the year for the control and 4 ensemble members. 
 
 You will need awscli installed on your machine. To learn more, visit [https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-welcome.html](https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-welcome.html). 
 
+This workflow utilizes job array via slurm. In `downloads/GEFSv12_reforecast/`, run:
+
 ```
-# in download directory
-bash download_GEFSv12_reforecast.sh
+sbatch run_download_GEFSv12_reforecast.slurm
+
+## Note: you will need to edit Line 20 to reflect which list of calls you are currently processes. (e.g., to process calls_1.txt, modify the end of Line 20 to read "calls_1.txt"
+
 ```
 

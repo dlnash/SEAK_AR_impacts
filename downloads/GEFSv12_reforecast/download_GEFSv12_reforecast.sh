@@ -54,7 +54,8 @@ p04
 )
 # set up out path
 ## path for EXPANSE
-PATH_TO_OUT="/expanse/nfs/cw3e/cwp140/downloads/GEFSv12_reforecast/${IN_DATE}/"
+# PATH_TO_OUT="/expanse/nfs/cw3e/cwp140/downloads/GEFSv12_reforecast/${IN_DATE}/"
+PATH_TO_OUT="/expanse/lustre/scratch/dnash/temp_project/downloaded/GEFSv12_reforecast/${IN_DATE}/"
 mkdir -p ${PATH_TO_OUT}
 echo ${PATH_TO_OUT}
 

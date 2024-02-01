@@ -100,7 +100,7 @@ def read_and_regrid_prs_var(varname, date, year, start, stop):
         xarray dataset of variable at 0.25 degree horizontal resolution at all given pressure levels
     '''
     
-    path_to_data = '/expanse/nfs/cw3e/cwp140/downloads/GEFSv12_reforecast/{0}/'.format(date) 
+    path_to_data = '/expanse/lustre/scratch/dnash/temp_project/downloaded/GEFSv12_reforecast/{0}/'.format(date) 
     
     # read data below 700 mb - 0.25 degree
     fname = path_to_data+"{0}_pres_{1}00*.grib2".format(varname, date)
@@ -160,7 +160,7 @@ def read_sfc_var(varname, date, year, start, stop):
         xarray dataset of variable at 0.25 degree horizonal resolution for all times
     '''
     
-    path_to_data = '/expanse/nfs/cw3e/cwp140/downloads/GEFSv12_reforecast/{0}/'.format(date)
+    path_to_data = '/expanse/lustre/scratch/dnash/temp_project/downloaded/GEFSv12_reforecast/{0}/'.format(date)
     
     # read surfaced data
     fname = path_to_data+"{0}_{1}00*.grib2".format(varname, date) 
