@@ -109,8 +109,10 @@ def read_and_regrid_prs_var(varname, date, year, start, stop):
     try:
         ds_below = xr.open_mfdataset(fname, engine='cfgrib', concat_dim="number", combine='nested', preprocess=partial_func)
     except ValueError:
+        print('trying alternative method')
         ds_below = fix_GEFSv12_open_mfdataset(fname, start, stop)
     except TypeError:
+        print('trying alternative method')
         ds_below = fix_GEFSv12_open_mfdataset(fname, start, stop)
         
     ds_below = ds_below.assign_coords({"longitude": (((ds_below.longitude + 180) % 360) - 180)}) # Convert DataArray longitude coordinates from 0-359 to -180-179
@@ -120,8 +122,10 @@ def read_and_regrid_prs_var(varname, date, year, start, stop):
     try:
         ds_above = xr.open_mfdataset(fname, engine='cfgrib', concat_dim="number", combine='nested', preprocess=partial_func)
     except TypeError:
+        print('trying alternative method for above')
         ds_above = fix_GEFSv12_open_mfdataset(fname, start, stop)
     except ValueError:
+        print('trying alternative method for above')
         ds_above = fix_GEFSv12_open_mfdataset(fname, start, stop)
     
         
@@ -183,8 +187,11 @@ def calc_IVT_manual(ds):
     '''
     Calculate IVT manually (not using scipy.integrate)
     This is in case you need to remove values below the surface
-    '''
-
+     '''
+    if ds.valid_time.size > 8:
+        valid_times = ds.valid_time.isel(isobaricInhPa=0).values
+    else:
+        valid_times = ds.valid_time.values
     pressure = ds.isobaricInhPa.values*100 # convert from hPa to Pa
     dp = np.diff(pressure) # delta pressure
     g = 9.81 # gravity constant
@@ -218,6 +225,7 @@ def calc_IVT_manual(ds):
     ivt.name = 'ivt'
 
     ds = xr.merge([qu, qv, ivt])
+    ds = ds.assign_coords({'valid_time': (['step'], valid_times)})
     
     # # put into a new dataset
     # lat = ds.latitude.values

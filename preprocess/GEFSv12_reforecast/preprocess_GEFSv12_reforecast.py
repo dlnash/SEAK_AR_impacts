@@ -59,6 +59,7 @@ for i, st in enumerate(range(0, 80, 8)):
         ## integrate to calculate IVT
         print('Calculating IVT ....')
         ds_IVT = gefs.calc_IVT_manual(ds) # calculate IVT
+        ds_IVT = ds_IVT.isel(step=slice(0, 8)) # confirm that it only is 8 time steps
     
         # get info for saving file
         start = ds_IVT.step.values[0].astype('timedelta64[h]')
@@ -68,7 +69,8 @@ for i, st in enumerate(range(0, 80, 8)):
     
         ## save IVT data to netCDF file
         print('Writing {0} to netCDF ....'.format(date))
-        out_fname = path_to_data + 'preprocessed/GEFSv12_reforecast/{3}/{0}_{3}_F{1}_F{2}.nc'.format(date, start, stop, variable) 
+        out_fname = path_to_data + 'preprocessed/GEFSv12_reforecast/{3}/{0}_{3}_F{1}_F{2}.nc'.format(date, start, stop, variable)
+        print(out_fname)
         ds_IVT.load().to_netcdf(path=out_fname, mode = 'w', format='NETCDF4')
 
     if variable == 'uv1000':
@@ -89,7 +91,7 @@ for i, st in enumerate(range(0, 80, 8)):
         start = int(start / np.timedelta64(1, 'h'))
         stop = int(stop / np.timedelta64(1, 'h'))
 
-        ## save uv1000 data to netCDF file
+        ## save data to netCDF file
         print('Writing {0} to netCDF ....'.format(date))
         out_fname = path_to_data + 'preprocessed/GEFSv12_reforecast/{3}/{0}_{3}_F{1}_F{2}.nc'.format(date, start, stop, variable) 
         ds.load().to_netcdf(path=out_fname, mode = 'w', format='NETCDF4')

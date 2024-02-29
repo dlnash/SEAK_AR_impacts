@@ -4,8 +4,8 @@
 #SBATCH -N 1 # Ensure that all cores are on one machine
 #SBATCH --nodes=1 # specifies how many nodes to use (each node has 24 cores)
 #SBATCH --ntasks-per-node=1
-#SBATCH --cpus-per-task=1
-#SBATCH -t 24:00:00 # Runtime in HH:MM:SS
+#SBATCH --mem=20GB
+#SBATCH -t 5:00:00 # Runtime in HH:MM:SS
 #SBATCH -o slurm_out/output_%a # File to which STDOUT will be written
 #SBATCH -e slurm_out/output_err%a # File to which STDERR will be written
 #SBATCH --job-name=preprocess_GEFSv12
@@ -17,5 +17,5 @@
 source /home/${USER}/.bashrc
 source activate SEAK-impacts
  
-linevar=`sed $SLURM_ARRAY_TASK_ID'q;d' calls_1.txt`
+linevar=`sed $SLURM_ARRAY_TASK_ID'q;d' calls_6.txt`
 eval $linevar

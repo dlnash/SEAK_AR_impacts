@@ -21,7 +21,7 @@ from pandas.tseries.offsets import MonthEnd
 ## FUNCTIONS
 
 def clean_impact_data(start_date = '2000-01-01', end_date = '2019-08-31'):
-    fname = '/data/projects/Comet/cwp140/downloads/ar_impact_info.csv'
+    fname = '../data/ar_impact_info.csv'
     impact_df = pd.read_csv(fname)
     impact_df = impact_df.set_index(pd.to_datetime(impact_df['Impact dates']))
     idx = (impact_df.index >= start_date) & (impact_df.index <= end_date)

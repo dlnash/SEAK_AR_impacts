@@ -71,7 +71,7 @@ print(start_date, end_date)
 ## load all days from the new subset
 ## create list of fnames
 fname_lst = []
-varname = 'uv1000' ## ivt, uv1000
+varname = 'ivt' ## ivt, uv1000
 
 ## append filenames to a list
 print('Gathering filenames ...')
