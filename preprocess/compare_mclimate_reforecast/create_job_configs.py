@@ -81,7 +81,7 @@ file.close()
 for i, njobs in enumerate(njob_lst):
     call_str_lst = []
     for j, job in enumerate(range(1, njobs+1, 1)):
-        call_string = "python calc_mclimate.py config_{0}.yaml 'job_{1}'".format(i+1, j+1)
+        call_string = "python compare_mclimate_reforecast.py config_{0}.yaml 'job_{1}'".format(i+1, j+1)
         call_str_lst.append(call_string)
         
     ## now write those lines to a text file
