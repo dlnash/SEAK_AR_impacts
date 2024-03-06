@@ -24,13 +24,14 @@ idx = (ar_df.index.year >= 2000) & (ar_df.index.year <= 2019)
 ar_df = ar_df.loc[idx]
 ar_dates = ar_df.index.values
 
+
 dates_new = []
 mon_lst = []
 day_lst = []
 for i, date in enumerate(ar_dates):
     ts = pd.to_datetime(str(date))
     # ts = date
-    d = ts - timedelta(days=3)
+    d = ts - timedelta(days=3) ## need to get the date of 3 days prior
     t = d.strftime('%Y%m%d')
     mon_lst.append(d.month)
     day_lst.append(d.day)

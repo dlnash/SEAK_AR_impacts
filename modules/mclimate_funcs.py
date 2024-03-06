@@ -55,6 +55,11 @@ def load_reforecast(date, varname):
     return forecast
 
 def load_mclimate(mon, day, lead=72):
+    ## special circumstance for leap day
+    if (mon == 2) & (day == 29):
+        mon = 2
+        day = 28
+        
     ## load mclimate data
     path_to_data = '/expanse/nfs/cw3e/cwp140/'      # project data -- read only
     fname_pattern = path_to_data + 'preprocessed/mclimate/GEFSv12_reforecast_mclimate_ivt_{0}{1}_*hr-lead.nc'.format(mon, day)

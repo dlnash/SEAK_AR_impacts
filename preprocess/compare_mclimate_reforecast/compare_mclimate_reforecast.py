@@ -10,6 +10,7 @@ import os, sys
 import yaml
 import xarray as xr
 import pandas as pd
+from datetime import timedelta
 
 path_to_repo = '/home/dnash/repos/SEAK_AR_impacts/'
 sys.path.append(path_to_repo+'modules')
@@ -38,8 +39,9 @@ mclimate = mclim_func.load_mclimate(mon, day)
 ds = mclim_func.compare_mclimate_to_forecast(fc, mclimate)
 
 ## add time to ds
-time = pd.to_datetime(date)
-ds = ds.assign_coords({"time": time})
+init_time = pd.to_datetime(date, format='%Y%m%d') # init date
+valid_time = init_time + timedelta(days=3) ## the date in the config file is the init_time
+ds = ds.assign_coords({"init_time": init_time, "valid_time": valid_time})
 
 ## save data to netCDF file
 print('Writing to netCDF ....')
