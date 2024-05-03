@@ -40,10 +40,10 @@ ds = mclim_func.compare_mclimate_to_forecast(fc, mclimate)
 
 ## add time to ds
 init_time = pd.to_datetime(date, format='%Y%m%d') # init date
-valid_time = init_time + timedelta(days=3) ## the date in the config file is the init_time
+valid_time = init_time + timedelta(days=1) ## the date in the config file is the init_time
 ds = ds.assign_coords({"init_time": init_time, "valid_time": valid_time})
 
 ## save data to netCDF file
 print('Writing to netCDF ....')
-out_fname = path_to_data + 'preprocessed/mclimate_AR_dates/mclimate_ivt_{0}_F72.nc'.format(date)
+out_fname = path_to_data + 'preprocessed/mclimate_AR_dates/mclimate_ivt_{0}_F24.nc'.format(date)
 ds.to_netcdf(path=out_fname, mode = 'w', format='NETCDF4')

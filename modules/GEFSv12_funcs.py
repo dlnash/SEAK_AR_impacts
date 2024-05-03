@@ -10,12 +10,12 @@ import pandas as pd
 import xarray as xr
 from datetime import timedelta
 from scipy.integrate import trapezoid
-# import wrf
+import wrf
 import glob
 import re
-import dask
+# import dask
 from functools import partial
-dask.config.set(**{'array.slicing.split_large_chunks': True})
+# dask.config.set(**{'array.slicing.split_large_chunks': True})
 
 def list_of_processed_trackIDs(varname, server):
     '''
@@ -302,22 +302,23 @@ def calc_freezing_level(ds):
     ## need 2 3D arrays for input
     ## reshape output arrays
     ninit, ntime, nlev, nlat, nlon = ds.gh.shape
-    gh = ds.gh.values.reshape(ninit*ntime, nlev, nlat, nlon)
-    t = ds.t.values.reshape(ninit*ntime, nlev, nlat, nlon)-273.15 # convert to *C
+    gh = ds.gh.values
+    t = ds.t.values-273.15 # convert to *C
 
     # interpolate gh to temperature = 0
     interp_var = wrf.interplevel(gh, t, [0])
 
-    # put into a simple 3D dataset
-    time = ds.valid_time.values
-    time = time.flatten()
+    # put into a dataset
     lat = ds.latitude.values
     lon = ds.longitude.values
+    print(interp_var.values.shape)
 
-    var_dict = {'freezing_level': (['time', 'lat', 'lon'], interp_var.values)}
+    var_dict = {'freezing_level': (['number', 'step', 'lat', 'lon'], interp_var.values)}
     ds = xr.Dataset(var_dict,
-                    coords={'time': (['time'], time),
+                    coords={'number': (['number'], ds.number.values),
+                            'step': (['step'], ds.step.values),
                             'lat': (['lat'], lat),
-                            'lon': (['lon'], lon)})
+                            'lon': (['lon'], lon),
+                            'valid_time': (['step'], ds.valid_time.values)})
 
     return ds

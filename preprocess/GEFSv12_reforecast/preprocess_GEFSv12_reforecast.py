@@ -26,7 +26,7 @@ ddict = config[job_info] # pull the job info from the dict
 
 year = ddict['year']
 date = ddict['date']
-variable = 'ivt' ## can be 'ivt', 'freezing_level', or 'uv1000'
+variable = 'freezing_level' ## can be 'ivt', 'freezing_level', or 'uv1000'
 
 for i, st in enumerate(range(0, 80, 8)):
     print(st, st+8)
@@ -60,18 +60,7 @@ for i, st in enumerate(range(0, 80, 8)):
         print('Calculating IVT ....')
         ds_IVT = gefs.calc_IVT_manual(ds) # calculate IVT
         ds_IVT = ds_IVT.isel(step=slice(0, 8)) # confirm that it only is 8 time steps
-    
-        # get info for saving file
-        start = ds_IVT.step.values[0].astype('timedelta64[h]')
-        stop = ds_IVT.step.values[-1].astype('timedelta64[h]')
-        start = int(start / np.timedelta64(1, 'h'))
-        stop = int(stop / np.timedelta64(1, 'h'))
-    
-        ## save IVT data to netCDF file
-        print('Writing {0} to netCDF ....'.format(date))
-        out_fname = path_to_data + 'preprocessed/GEFSv12_reforecast/{3}/{0}_{3}_F{1}_F{2}.nc'.format(date, start, stop, variable)
-        print(out_fname)
-        ds_IVT.load().to_netcdf(path=out_fname, mode = 'w', format='NETCDF4')
+        ds = ds_IVT
 
     if variable == 'uv1000':
         print('Loading u and v data ....')
@@ -85,13 +74,26 @@ for i, st in enumerate(range(0, 80, 8)):
             
         ds = xr.merge(ds_lst) # merge u and v into single ds
 
-        # get info for saving file
-        start = ds.step.values[0].astype('timedelta64[h]')
-        stop = ds.step.values[-1].astype('timedelta64[h]')
-        start = int(start / np.timedelta64(1, 'h'))
-        stop = int(stop / np.timedelta64(1, 'h'))
+    if variable == 'freezing_level':
+        print('Loading tmp and hgt data ....')
+        varname_lst = ['tmp', 'hgt']
+        ds_lst = []
+        for i, varname in enumerate(varname_lst):
+            ds = gefs.read_and_regrid_prs_var(varname, date, year, start, stop)
+            ds_lst.append(ds)
 
-        ## save data to netCDF file
-        print('Writing {0} to netCDF ....'.format(date))
-        out_fname = path_to_data + 'preprocessed/GEFSv12_reforecast/{3}/{0}_{3}_F{1}_F{2}.nc'.format(date, start, stop, variable) 
-        ds.load().to_netcdf(path=out_fname, mode = 'w', format='NETCDF4')
+        ds = xr.merge(ds_lst) # merge tmp and hgt data
+        ds = gefs.calc_freezing_level(ds) # calculate freezing level (m)
+
+
+#### NOW SAVE FILE #### 
+    # get info for saving file
+    start = ds.step.values[0].astype('timedelta64[h]')
+    stop = ds.step.values[-1].astype('timedelta64[h]')
+    start = int(start / np.timedelta64(1, 'h'))
+    stop = int(stop / np.timedelta64(1, 'h'))
+
+    ## save data to netCDF file
+    print('Writing {0} to netCDF ....'.format(date))
+    out_fname = path_to_data + 'preprocessed/GEFSv12_reforecast/{3}/{0}_{3}_F{1}_F{2}.nc'.format(date, start, stop, variable) 
+    ds.load().to_netcdf(path=out_fname, mode = 'w', format='NETCDF4')

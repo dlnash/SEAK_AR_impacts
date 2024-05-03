@@ -31,7 +31,7 @@ day_lst = []
 for i, date in enumerate(ar_dates):
     ts = pd.to_datetime(str(date))
     # ts = date
-    d = ts - timedelta(days=3) ## need to get the date of 3 days prior
+    d = ts - timedelta(days=1) ## need to get the date of 3 days prior
     t = d.strftime('%Y%m%d')
     mon_lst.append(d.month)
     day_lst.append(d.day)

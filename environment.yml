@@ -20,5 +20,6 @@ dependencies:
   - metpy
   - cfgrib
   - richdem
+  - wrf-python
       
 
