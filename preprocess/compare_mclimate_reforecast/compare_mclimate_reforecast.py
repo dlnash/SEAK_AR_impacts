@@ -34,7 +34,6 @@ config = yaml.load(open(config_file), Loader=yaml.SafeLoader) # read the file
 ddict = config[job_info] # pull the job info from the dict
 
 date = int(ddict['date']) # this is the AR date
-
 valid_time = pd.to_datetime(str(date)) # this is the AR date
 d = valid_time - timedelta(hours=F) ## we want the initialization date to be x hours prior to AR date
 mon = d.strftime('%m') # month of initialization
