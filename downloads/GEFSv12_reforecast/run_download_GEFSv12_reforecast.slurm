@@ -5,17 +5,17 @@
 #SBATCH --nodes=1 # specifies how many nodes to use (each node has 24 cores)
 #SBATCH --ntasks-per-node=1
 #SBATCH --cpus-per-task=1
-#SBATCH -t 24:00:00 # Runtime in HH:MM:SS
+#SBATCH -t 3:00:00 # Runtime in HH:MM:SS
 #SBATCH -o slurm_out/output_%a # File to which STDOUT will be written
 #SBATCH -e slurm_out/output_err%a # File to which STDERR will be written
 #SBATCH --job-name=download_GEFSv12
 #SBATCH --mail-type=ALL # Type of email notification- BEGIN,END,FAIL,ALL
 #SBATCH --mail-user=dnash@ucsd.edu # Email to which notifications will be sent
-#SBATCH --array=1-999%100 # runs jobs x-y, 100 at a time
+#SBATCH --array=1-11%10 # runs jobs x-y, 100 at a time
 
 # Activate Anaconda work environment
 source /home/${USER}/.bashrc
 source activate eaton-scripps-CO
  
-linevar=`sed $SLURM_ARRAY_TASK_ID'q;d' calls_8.txt`
+linevar=`sed $SLURM_ARRAY_TASK_ID'q;d' calls_missing.txt`
 eval $linevar

@@ -109,10 +109,10 @@ def read_and_regrid_prs_var(varname, date, year, start, stop):
     try:
         ds_below = xr.open_mfdataset(fname, engine='cfgrib', concat_dim="number", combine='nested', preprocess=partial_func)
     except ValueError:
-        print('trying alternative method')
+        print('trying alternative method for below 700 hPa')
         ds_below = fix_GEFSv12_open_mfdataset(fname, start, stop)
     except TypeError:
-        print('trying alternative method')
+        print('trying alternative method for below 700 hPa')
         ds_below = fix_GEFSv12_open_mfdataset(fname, start, stop)
         
     ds_below = ds_below.assign_coords({"longitude": (((ds_below.longitude + 180) % 360) - 180)}) # Convert DataArray longitude coordinates from 0-359 to -180-179
@@ -122,10 +122,10 @@ def read_and_regrid_prs_var(varname, date, year, start, stop):
     try:
         ds_above = xr.open_mfdataset(fname, engine='cfgrib', concat_dim="number", combine='nested', preprocess=partial_func)
     except TypeError:
-        print('trying alternative method for above')
+        print('trying alternative method for above 700 hPa')
         ds_above = fix_GEFSv12_open_mfdataset(fname, start, stop)
     except ValueError:
-        print('trying alternative method for above')
+        print('trying alternative method for above 700 hPa')
         ds_above = fix_GEFSv12_open_mfdataset(fname, start, stop)
     
         
@@ -172,7 +172,7 @@ def read_sfc_var(varname, date, year, start, stop):
     try:
         ds = xr.open_mfdataset(fname, engine='cfgrib', concat_dim="number", combine='nested', preprocess=partial_func)
     except ValueError:
-        print('Trying other option')
+        print('Trying alternative reading option')
         ds = fix_GEFSv12_open_mfdataset(fname, start, stop)
 
     ## Back to everyone preprocess

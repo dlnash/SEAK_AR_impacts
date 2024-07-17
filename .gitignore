@@ -109,3 +109,5 @@ auxhist*
 *.gif
 
 core*
+preprocess/organize_data/slurm_out/*
+preprocess/concat_mclimate/slurm_out/*
