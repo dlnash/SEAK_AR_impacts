@@ -229,6 +229,20 @@ def AR_rank(ds):
     return rank
 
 def calc_time_integrated_IVT(ds):
+    """
+    Calculates time-integrated IVT using an xarray dataset that has IVTv and IVTu
+    
+    Parameters
+    ----------
+    ds : 
+        xarray dataset with meridional and zonal IVT (ivtu, ivtv)
+    
+    Returns
+    -------
+    tIVT : xarray dataset
+        xarray dataset with time-integrated IVT where the units are kg m-1 divided by a factor of 10^7
+
+    """ 
     # time integrate IVT
     time = np.arange(0, (len(ds.time)*3), 3)*3600 # convert to seconds
     tIVTu = trapz(y=ds.ivtu.values, x=time, axis=0)

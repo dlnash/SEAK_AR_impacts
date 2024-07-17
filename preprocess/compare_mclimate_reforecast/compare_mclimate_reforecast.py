@@ -25,25 +25,31 @@ job_info = str(sys.argv[2]) # this is the job name
 config = yaml.load(open(config_file), Loader=yaml.SafeLoader) # read the file
 ddict = config[job_info] # pull the job info from the dict
 
-date = int(ddict['date'])
-mon = int(ddict['month'])
-day = int(ddict['day'])
+date = int(ddict['date']) # this is the AR date
 
-## load the reforecast
-fc = mclim_func.load_reforecast(date, 'ivt')
+F = 24 ## update this to whatever you are testing!!!
 
-## load the mclimate for the same date
+valid_time = pd.to_datetime(str(date)) # this is the AR date
+d = valid_time - timedelta(hours=F) ## we want the initialization date to be x hours prior to AR date
+mon = d.month # month of initialization
+day = d.day # day of initialization
+init_date = d.strftime('%Y%m%d')
+
+## load the reforecast for the initialization date
+fc = mclim_func.load_reforecast(init_date, 'ivt')
+fc = fc.sel(step=F)
+
+## load the mclimate for the same initialization date
 mclimate = mclim_func.load_mclimate(mon, day)
+mclimate = mclimate.sel(step=F)
 
 ## compare the mclimate to the reforecast
 ds = mclim_func.compare_mclimate_to_forecast(fc, mclimate)
 
 ## add time to ds
-init_time = pd.to_datetime(date, format='%Y%m%d') # init date
-valid_time = init_time + timedelta(days=1) ## the date in the config file is the init_time
-ds = ds.assign_coords({"init_time": init_time, "valid_time": valid_time})
+ds = ds.assign_coords({"init_time": d, "valid_time": valid_time})
 
 ## save data to netCDF file
 print('Writing to netCDF ....')
-out_fname = path_to_data + 'preprocessed/mclimate_AR_dates/mclimate_ivt_{0}_F24.nc'.format(date)
+out_fname = path_to_data + 'preprocessed/mclimate_AR_dates/mclimate_ivt_{0}_F{1}.nc'.format(date, F)
 ds.to_netcdf(path=out_fname, mode = 'w', format='NETCDF4')

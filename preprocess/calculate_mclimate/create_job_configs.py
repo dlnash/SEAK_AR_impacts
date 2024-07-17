@@ -12,9 +12,7 @@ import numpy as np
 import yaml
 from itertools import chain
 
-# dates = pd.date_range('2023-11-11', '2023-11-20', freq='1D') ## final dates for MClimate
-# dates = pd.date_range('2023-01-01', '2023-11-10', freq='1D') ## final dates for MClimate
-dates = pd.date_range('2023-11-21', '2023-12-31', freq='1D') ## final dates for MClimate
+dates = pd.date_range('2023-01-01', '2023-12-31', freq='1D') ## final dates for MClimate
 
 month_lst = dates.strftime("%m") # month array
 day_lst = dates.strftime("%d") # day array
