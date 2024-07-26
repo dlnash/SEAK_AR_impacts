@@ -87,27 +87,18 @@ def load_reforecast(date, varname):
     forecast = forecast.sel(step=tmp) ## select every 6 hours up to 10 days lead time
     step_vals = forecast.step.values / pd.Timedelta(hours=1)
     forecast = forecast.assign_coords({"step": step_vals.astype(int)})
-<<<<<<< HEAD
     if varname == 'ivt':
         forecast = forecast.rename({'longitude': 'lon', 'latitude': 'lat', 'time': 'init_time'}) # need to rename this to match GEFSv12 Reforecast
         forecast = forecast.drop_vars(["ivtu", "ivtv"])
     else:
         forecast = forecast.assign_coords(init_time=(pd.to_datetime(date)))
     forecast = forecast.sel(lon=slice(-179.5, -110.), lat=slice(70., 10.))
-=======
-    forecast = forecast.rename({'longitude': 'lon', 'latitude': 'lat', 'ivt': 'IVT', 'time': 'init_time'}) # need to rename this to match GEFSv12 Reforecast
-    forecast = forecast.sel(lon=slice(-179.5, -110.))
-    forecast = forecast.drop_vars(["ivtu", "ivtv"])
->>>>>>> 313ce07730dc805afc4f5d16c3ef9606b85078d3
     forecast = forecast.mean('number') # ensemble mean
 
     return forecast
 
-<<<<<<< HEAD
+
 def load_mclimate(mon, day, varname):
-=======
-def load_mclimate(mon, day):
->>>>>>> 313ce07730dc805afc4f5d16c3ef9606b85078d3
     ## special circumstance for leap day
     if (mon == '02') & (day == '29'):
         mon = '02'
@@ -117,18 +108,12 @@ def load_mclimate(mon, day):
     path_to_data = '/expanse/nfs/cw3e/cwp140/'      # project data -- read only
     fname = path_to_data + 'preprocessed/{2}_mclimate/GEFSv12_reforecast_mclimate_{2}_{0}{1}.nc'.format(mon, day, varname)
     # print(fname_pattern)
-<<<<<<< HEAD
     ds = xr.open_dataset(fname)
     # ds = ds.sortby("step") # sort by step (forecast lead)
     if varname == 'ivt':
         ds = ds.rename({'longitude': 'lon', 'latitude': 'lat'}) # need to rename this to match GEFSv12 Reforecast
     else:
         ds = ds
-=======
-    ds = xr.open_mfdataset(fname_pattern, engine='netcdf4', concat_dim="step", combine='nested')
-    ds = ds.sortby("step") # sort by step (forecast lead)
-    ds = ds.rename({'longitude': 'lon', 'latitude': 'lat'}) # need to rename this to match GEFSv12 Reforecast
->>>>>>> 313ce07730dc805afc4f5d16c3ef9606b85078d3
     ds = ds.sel(lon=slice(-179.5, -110.), lat=slice(70., 10.))
 
     return ds
