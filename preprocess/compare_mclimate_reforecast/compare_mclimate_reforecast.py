@@ -15,6 +15,7 @@ from datetime import timedelta
 path_to_repo = '/home/dnash/repos/SEAK_AR_impacts/'
 sys.path.append(path_to_repo+'modules')
 import mclimate_funcs as mclim_func
+from plotter import plot_mclimate_reforecast
 
 # dask.config.set(**{'array.slicing.split_large_chunks': True})
 path_to_data = '/expanse/nfs/cw3e/cwp140/'     # project data -- read only
@@ -53,6 +54,9 @@ ds = mclim_func.compare_mclimate_to_reforecast(fc, mclimate, varname)
 
 ## add time to ds
 ds = ds.assign_coords({"init_time": d, "valid_time": valid_time})
+
+## plot single plot
+plot_mclimate_reforecast(ds, fc, F, varname)
 
 ## save data to netCDF file
 print('Writing to netCDF ....')

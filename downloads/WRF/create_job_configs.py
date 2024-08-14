@@ -1,51 +1,39 @@
 ######################################################################
 # Filename:    create_job_configs.py
 # Author:      Deanna Nash dnash@ucsd.edu
-# Description: Script to create .yaml configuration file to run job_array with slurm for comparing M-Climate to GEFSv12 Reforecast Data
+# Description: Script to create .yaml configuration file to run job_array with slurm for downloading GEFSv12 Reforecast Data
 #
 ######################################################################
 
 ## import libraries
 import pandas as pd
-from datetime import timedelta
 import numpy as np
 import yaml
 from itertools import chain
 
-## get list of all AR days
-# fname = '../../out/SEAK_ardates_daily.csv'
-# ar_df = pd.read_csv(fname) # read in AR dates
-# idx = (ar_df.AR == 1)
-# ar_df = ar_df.loc[idx]
-# # reset the index as "time"
-# ar_df = ar_df.set_index(pd.to_datetime(ar_df['Unnamed: 0']))
-# ## subset dates to Jan 2000 - Dec 2019
-# idx = (ar_df.index.year >= 2000) & (ar_df.index.year <= 2019)
-# ar_df = ar_df.loc[idx]
-# ar_dates = ar_df.index.values
+## create list of dates to download in parallel
+start_date = pd.to_datetime('1980-01-01')
+end_date = pd.to_datetime('2019-12-31')
 
-fname = '../../out/high_impact_precip_dates_all.csv'
-ar_df = pd.read_csv(fname) # read in AR dates
-ar_df = ar_df.set_index(pd.to_datetime(ar_df['dates']))
-ar_dates = ar_df.index.values
-
-dates_new = []
-for i, date in enumerate(ar_dates):
-    ts = pd.to_datetime(str(date))
-    t = ts.strftime('%Y%m%d')
-    dates_new.append(t)
-
+## make a list of dates between start_date and end_date
+date_lst = pd.date_range(start_date, end_date, freq='1D')
+			
 jobcounter = 0
 filecounter = 0
 ## loop through to create dictionary for each job
 d_lst = []
 dest_lst = []
 njob_lst = []
-for i, date in enumerate(dates_new):
+for i, date in enumerate(date_lst):
+    yr = date.strftime("%Y")
+    month = date.strftime("%m")
+    day = date.strftime("%d")
+    
     jobcounter += 1
-
     d = {'job_{0}'.format(jobcounter):
-         {'date': date
+         {'year': yr,
+          'month': month,
+          'day': day
           }}
     d_lst.append(d)
     
@@ -78,7 +66,7 @@ file.close()
 for i, njobs in enumerate(njob_lst):
     call_str_lst = []
     for j, job in enumerate(range(1, njobs+1, 1)):
-        call_string = "python compare_mclimate_reforecast.py config_{0}.yaml 'job_{1}'".format(i+1, j+1)
+        call_string = "python getWRF_batch.py config_{0}.yaml 'job_{1}'".format(i+1, j+1)
         call_str_lst.append(call_string)
         
     ## now write those lines to a text file

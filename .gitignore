@@ -111,3 +111,6 @@ auxhist*
 core*
 preprocess/organize_data/slurm_out/*
 preprocess/concat_mclimate/slurm_out/*
+downloads/GEFS/slurm_out/*
+downloads/WRF/slurm_out/* 
+preprocess/GEFS/slurm_out/*
