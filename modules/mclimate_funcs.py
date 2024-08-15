@@ -41,6 +41,7 @@ def compare_mclimate_to_forecast(fc, mclimate, varname):
         b_lst.append(new_ds)
         
     ds = xr.merge(b_lst)
+    ds = ds.assign_coords({"init_date": (fc.init_date)})
 
     return ds
 
@@ -88,10 +89,10 @@ def load_reforecast(date, varname):
     step_vals = forecast.step.values / pd.Timedelta(hours=1)
     forecast = forecast.assign_coords({"step": step_vals.astype(int)})
     if varname == 'ivt':
-        forecast = forecast.rename({'longitude': 'lon', 'latitude': 'lat', 'time': 'init_time'}) # need to rename this to match GEFSv12 Reforecast
+        forecast = forecast.rename({'longitude': 'lon', 'latitude': 'lat', 'time': 'init_date'}) # need to rename this to match GEFSv12 Reforecast
         forecast = forecast.drop_vars(["ivtu", "ivtv"])
     else:
-        forecast = forecast.assign_coords(init_time=(pd.to_datetime(date)))
+        forecast = forecast.assign_coords(init_date=(pd.to_datetime(date)))
     forecast = forecast.sel(lon=slice(-179.5, -110.), lat=slice(70., 10.))
     forecast = forecast.mean('number') # ensemble mean
 

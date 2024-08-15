@@ -8,6 +8,7 @@ Description: Functions for plotting
 
 import os, sys
 import numpy as np
+import itertools
 import xarray as xr
 import matplotlib.pyplot as plt
 import cartopy.crs as ccrs
@@ -240,6 +241,104 @@ def plot_mclimate_reforecast(ds, fc, step, varname):
     
     ax.set_title('Initialized: {0}'.format(init_time), loc='left', fontsize=10)
     ax.set_title('F-{0} | Valid: {1}'.format(step, valid_time), loc='right', fontsize=10)
+
+    
+    txt = 'Relative to all 162-h GEFSv12 reforecasts initialized between {0} and {1} (2000-2019)'.format(start_date, end_date)
+    ann_ax = fig.add_subplot(gs[-1, 0])
+    ann_ax.axis('off')
+    ann_ax.annotate(textwrap.fill(txt, 101), # this is the text
+               (0, 0.3), # these are the coordinates to position the label
+                textcoords="offset points", # how to position the text
+                xytext=(0,-19), # distance from text to points (x,y)
+                ha='left', # horizontal alignment can be left, right or center
+                **kw_ticklabels)
+    
+    fig.savefig('%s.%s' %(fname, fmt), bbox_inches='tight', dpi=fig.dpi)
+
+    plt.close(fig)
+
+def plot_mclimate_forecast(ds, fc, step, varname):
+    ts = pd.to_datetime(ds.init_date.values, format="%Y%m%d%H") 
+    init_date = ts.strftime('%Y%m%d%H')
+    # Set up projection
+    mapcrs = ccrs.PlateCarree()
+    datacrs = ccrs.PlateCarree()
+    
+    # Set tick/grid locations
+    lats = ds.lat.values
+    lons = ds.lon.values
+    dx = np.arange(lons.min().round(),lons.max().round()+10,10)
+    dy = np.arange(lats.min().round(),lats.max().round()+10,10)
+    
+    ext = [-170., -120., 40., 65.]
+    
+    # Create figure
+    fig = plt.figure(figsize=(9.5, 6.25))
+    fig.dpi = 300
+    # fname = 'figs/{2}_mclimate_{0}_F{1}'.format(init_date, step, varname)
+    fname = 'figs/{0}_mclimate_F{1}'.format(varname, int(step))
+    fmt = 'png'
+    
+    nrows = 3
+    ncols = 1
+    
+    # contour labels
+    kw_clabels = {'fontsize': 7, 'inline': True, 'inline_spacing': 7, 'fmt': '%i',
+                  'rightside_up': True, 'use_clabeltext': True}
+    
+    kw_ticklabels = {'size': 10, 'color': 'dimgray', 'weight': 'light'}
+    
+    ## Use gridspec to set up a plot with a series of subplots that is
+    ## n-rows by n-columns
+    gs = GridSpec(nrows, ncols, height_ratios=[1, 0.05, 0.05], width_ratios = [1], wspace=0.05, hspace=0.1)
+    ## use gs[rows index, columns index] to access grids
+    
+    ax = fig.add_subplot(gs[0, 0], projection=mapcrs)
+        
+    ax = draw_basemap(ax, extent=ext, xticks=dx, yticks=dy, left_lats=True, right_lats=False, bottom_lons=True)
+    
+    # Contour Filled (mclimate values)
+    data = ds.sel(step=step).mclimate.values*100.
+    if varname == 'ivt':
+        cmap, norm, bnds = ccmap.cmap('mclimate')
+    elif varname == 'freezing_level':
+        cmap, norm, bnds = ccmap.cmap('mclimate_purple')
+    cf = ax.contourf(lons, lats, data, transform=datacrs,
+                     levels=bnds, cmap=cmap, norm=norm, alpha=0.9, extend='neither')
+    
+    # Contour Lines (forecast values)
+    forecast = fc.sel(step=step)
+    if varname == 'ivt':
+        clevs = np.arange(250., 2100., 250.)
+    elif varname == 'freezing_level':
+        clevs = np.arange(0., 18000., 1500.)
+        forecast[varname] = forecast[varname]*3.281 # convert to feet
+        
+    cs = ax.contour(lons, lats, forecast[varname], transform=datacrs,
+                     levels=clevs, colors='k',
+                     linewidths=0.75, linestyles='solid')
+    plt.clabel(cs, **kw_clabels)
+    
+    # Add color bar
+    cbax = plt.subplot(gs[1,0]) # colorbar axis
+    cbarticks = [75., 90., 94., 95., 96., 97, 98, 99, 100.]
+    cbarticks = list(itertools.compress(bnds, cbarticks)) ## this labels the cbarticks based on the cmap dictionary
+    cb = Colorbar(ax = cbax, mappable = cf, orientation = 'horizontal', ticklocation = 'bottom',
+                 ticks=cbarticks)
+    cb.set_label('Model Climate Percentile Rank (xth)', fontsize=11)
+    cb.ax.tick_params(labelsize=12)
+    
+    init_time = ts.strftime('%HZ %d %b %Y')
+    start_date = ts - timedelta(days=45)
+    start_date = start_date.strftime('%d-%b')
+    end_date = ts + timedelta(days=45)
+    end_date = end_date.strftime('%d-%b')
+    
+    ts_valid = ts + timedelta(hours=int(step))
+    valid_time = ts_valid.strftime('%HZ %d %b %Y')
+    
+    ax.set_title('Initialized: {0}'.format(init_time), loc='left', fontsize=10)
+    ax.set_title('F-{0} | Valid: {1}'.format(int(step), valid_time), loc='right', fontsize=10)
 
     
     txt = 'Relative to all 162-h GEFSv12 reforecasts initialized between {0} and {1} (2000-2019)'.format(start_date, end_date)
