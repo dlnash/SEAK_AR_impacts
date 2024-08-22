@@ -26,7 +26,7 @@ ddict = config[job_info] # pull the job info from the dict
 
 year = ddict['year']
 date = ddict['date']
-variable = 'freezing_level' ## can be 'ivt', 'freezing_level', or 'uv1000'
+variable = 'uv1000' ## can be 'ivt', 'freezing_level', or 'uv1000'
 
 for i, st in enumerate(range(0, 80, 8)):
     print(st, st+8)

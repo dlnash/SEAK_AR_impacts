@@ -26,8 +26,8 @@ for i, yr in enumerate(range(2000, 2020)):
     # date_lst.append(dates)
 
     ## get the rest of the year
-    start_date = pd.to_datetime('{0}-01-01'.format(yr))
-    end_date = pd.to_datetime('{0}-12-31'.format(yr))
+    start_date = pd.to_datetime('{0}-01-06'.format(yr))
+    end_date = pd.to_datetime('{0}-01-12'.format(yr))
     
     ## make a list of dates between start_date and end_date
     dates = pd.date_range(start_date, end_date, freq='1D')

@@ -72,14 +72,14 @@ print(start_date, end_date)
 ## load all days from the new subset
 ## create list of fnames
 fname_lst = []
-varname = 'freezing_level' ## ivt, uv1000, 'freezing_level'
+varname = 'uv1000' ## ivt, uv1000, 'freezing_level'
 
 # ## copy files to scratch space
 # job_ID = os.environ["SLURM_JOB_ID"]
 # scratch_path = '/expanse/lustre/scratch/dnash/temp_project/mclimate/{0}/'.format(int(job_ID))
 # os.makedirs(os.path.dirname(scratch_path), exist_ok=True)
 
-scratch_path = '/expanse/lustre/scratch/dnash/temp_project/mclimate/{0}/'.format(varname)
+scratch_path = '/expanse/lustre/scratch/dnash/temp_project/downloaded/GEFSv12_reforecast/{0}/'.format(varname)
 
 ## append filenames to a list
 print('Gathering filenames ...')
