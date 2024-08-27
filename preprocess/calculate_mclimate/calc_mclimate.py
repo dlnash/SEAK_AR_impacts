@@ -74,12 +74,8 @@ print(start_date, end_date)
 fname_lst = []
 varname = 'uv1000' ## ivt, uv1000, 'freezing_level'
 
-# ## copy files to scratch space
-# job_ID = os.environ["SLURM_JOB_ID"]
-# scratch_path = '/expanse/lustre/scratch/dnash/temp_project/mclimate/{0}/'.format(int(job_ID))
-# os.makedirs(os.path.dirname(scratch_path), exist_ok=True)
-
-scratch_path = '/expanse/lustre/scratch/dnash/temp_project/downloaded/GEFSv12_reforecast/{0}/'.format(varname)
+scratch_path = '/expanse/lustre/scratch/dnash/temp_project/mclimate/{0}/'.format(varname)
+# scratch_path = path_to_data + 'preprocessed/GEFSv12_reforecast/{0}/'.format(varname)
 
 ## append filenames to a list
 print('Gathering filenames ...')
@@ -87,18 +83,7 @@ for i, dt in enumerate(final_lst):
     ts = pd.to_datetime(str(dt)) 
     d = ts.strftime("%Y%m%d")
     F1, F2 = get_filename_GEFSv12_reforecast(F)
-
-    # fpath = path_to_data + 'preprocessed/GEFSv12_reforecast/{0}/'.format(varname)
     fname = scratch_path + '{1}_{0}_F{2}_F{3}.nc'.format(varname, d, F1, F2)
-
-    # print(fpath+fname)
-    # print(scratch_path+fname)
-
-    # ## Copy files to scratch space
-    # shutil.copy(fpath+fname, scratch_path+fname) # copy file over to data folder
-    
-    # Create new filename list
-    # fname_lst.append(scratch_path+fname)
     fname_lst.append(fname)
 
 ### Read the dataset
@@ -156,7 +141,7 @@ mclimate = mclimate.assign_coords(dayofyear=period.day_of_year)
 mclimate = mclimate.expand_dims('dayofyear')
 
 # write to netCDF
-fname = os.path.join(path_to_data, 'preprocessed/mclimate/GEFSv12_reforecast_mclimate_{3}_{0}{1}_{2}hr-lead.nc'.format(mon, day, F, varname))
+fname = os.path.join('/expanse/lustre/scratch/dnash/temp_project/uv1000_mclimate/GEFSv12_reforecast_mclimate_{3}_{0}{1}_{2}hr-lead.nc'.format(mon, day, F, varname))
 mclimate.load().to_netcdf(path=fname, mode = 'w', format='NETCDF4')
 
 ## remove files from scratch space

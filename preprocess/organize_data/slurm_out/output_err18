@@ -1,2 +1,0 @@
-rsync: link_stat "/home/dnash/DATA/preprocessed/GEFSv12_reforecast/freezing_level/2020*" failed: No such file or directory (2)
-rsync error: some files/attrs were not transferred (see previous errors) (code 23) at main.c(1189) [sender=3.1.3]
