@@ -32,7 +32,7 @@ import textwrap
 # Import my modules
 sys.path.append('../modules') # Path to modules
 from constants import ucsd_colors
-import custom_cmaps as ccmap
+import customcmaps as ccmap
 
 def plot_terrain(ax, ext):
     fname = '/expanse/nfs/cw3e/cwp140/downloads/ETOPO1_Bed_c_gmt4.grd'
