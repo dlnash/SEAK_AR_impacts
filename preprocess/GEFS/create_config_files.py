@@ -13,7 +13,7 @@ from itertools import chain
 
 ## create list of init dates, data_names, and leads to download in parallel
 
-init_date_lst = ['20201128', '20231117']
+init_date_lst = ['20231114']
 lead_lst = np.arange(6, 246, 6)
 
 jobcounter = 0

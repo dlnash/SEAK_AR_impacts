@@ -16,8 +16,6 @@ path_to_repo = '/home/dnash/repos/SEAK_AR_impacts/'
 sys.path.append(path_to_repo+'modules')
 import GEFSv12_funcs as gefs
 
-path_to_data = '/expanse/nfs/cw3e/cwp140/'
-
 config_file = str(sys.argv[1]) # this is the config file name
 job_info = str(sys.argv[2]) # this is the job name
 
@@ -95,5 +93,6 @@ for i, st in enumerate(range(0, 80, 8)):
 
     ## save data to netCDF file
     print('Writing {0} to netCDF ....'.format(date))
-    out_fname = path_to_data + 'preprocessed/GEFSv12_reforecast/{3}/{0}_{3}_F{1}_F{2}.nc'.format(date, start, stop, variable) 
+    path_to_data = '/expanse/lustre/scratch/dnash/temp_project/mclimate/{0}/'.format(variable)
+    out_fname = path_to_data + '{0}_{3}_F{1}_F{2}.nc'.format(date, start, stop, variable) 
     ds.load().to_netcdf(path=out_fname, mode = 'w', format='NETCDF4')
