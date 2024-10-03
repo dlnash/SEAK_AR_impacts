@@ -8,6 +8,8 @@ Description: preprocess functions for AK 4 km WRF simulations downloaded from ht
 ## Imports
 import numpy as np
 import xarray as xr
+import re
+import pandas as pd
 
 
 def preprocess_UVwind(filenames, levlst):
@@ -87,7 +89,7 @@ def preprocess_UVwind(filenames, levlst):
     return ds
 
 
-def preprocess_2Dvar(filenames, varname):
+def preprocess_2Dvar(filenames, varname, temp_resolution):
     """preprocess 2D var from SEAK WRF data
     
     Returns a ds object (xarray) including the indicated variable
@@ -100,6 +102,8 @@ def preprocess_2Dvar(filenames, varname):
         list of wrf filenames to process
     varname : str
         str of 2D varname to process
+    temp_resolution : str
+        str of either 'hourly' or 'daily' to indicate the temporal resolution of the data
   
     Returns
     -------
@@ -121,8 +125,18 @@ def preprocess_2Dvar(filenames, varname):
          # extract the data we need
         data  = f[varname].values
 
-        # get time steps from this file
-        da_time.append(f.Time.values)
+        if temp_resolution == 'hourly':
+            # get time steps from this file
+            da_time.append(f.Time.values)
+
+        elif temp_resolution == 'daily':
+            # pull the date from the filename
+            regex = re.compile(r'\d+')
+            date_string = regex.findall(wrfin)
+            date_string = date_string[-3:]
+            df = pd.DataFrame([date_string], columns=['Year', 'Month', 'Day'])
+            time = pd.to_datetime(df)
+            da_time.append(time.values)
 
         # put values into preassigned arrays
         var_final.append(data)

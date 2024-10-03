@@ -1,5 +1,5 @@
 """
-Filename:    preprocess_SEAK-WRF.py
+Filename:    preprocess_SEAK-WRF_2Dvar.py
 Author:      Deanna Nash, dlnash@ucsb.edu
 Description: preprocess daily variables from 40 years of SEAK-WRF data and save as yearly nc files
 """
@@ -56,7 +56,7 @@ for year in np.arange(start_yr, end_yr+1):
     if output_varname == 'UV':
         ds = preprocess_UVwind(filenames, levlst)
     else:
-        ds = preprocess_2Dvar(filenames, output_varname)
+        ds = preprocess_2Dvar(filenames, output_varname, temp_resolution='daily')
     
     # write to netCDF
     print('Writing', output_varname, ' to netCDF')
