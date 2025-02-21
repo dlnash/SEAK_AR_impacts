@@ -8,14 +8,18 @@
 ## import libraries
 import pandas as pd
 import numpy as np
+import datetime
 import yaml
 from itertools import chain
 
 ## create list of init dates, data_names, and leads to download in parallel
 
-init_date_lst = ['20231114']
+# init_date_lst = ['20240919']
+df = pd.read_csv('../../out/GEFS_dates_download.csv')
+init_date_lst = df.d.values
+lead_lst = df.F.values
 data_name_lst = ['pgrb2a', 'pgrb2b']
-lead_lst = np.arange(6, 246, 6)
+# lead_lst = np.arange(6, 246, 6)
 
 jobcounter = 0
 filecounter = 0
@@ -23,7 +27,7 @@ filecounter = 0
 d_lst = []
 dest_lst = []
 njob_lst = []
-for i, init_date in enumerate(init_date_lst):
+for i, (init_date, lead) in enumerate(zip(init_date_lst, lead_lst)):
     for j, data_name in enumerate(data_name_lst):
         if data_name == 'pgrb2a':
             ens_lst = ['geavg']
@@ -33,29 +37,28 @@ for i, init_date in enumerate(init_date_lst):
                 ens = 'gep{0}'.format(str(ens_mem).zfill(2))
                 ens_lst.append(ens)
         for k, ens in enumerate(ens_lst):    
-        	for l, lead in enumerate(lead_lst):
-        	    jobcounter += 1
-        	    d = {"job_{0}".format(jobcounter):
-        	         {"init_date": init_date,
-        	          "data_name": "{0}".format(data_name),
-        	          "lead": "{0}".format(str(lead).zfill(3)),
-                      "ens": ens
-        	          }}
-        	    d_lst.append(d)
-        	    
-        	    if (jobcounter == 999):
-        	        filecounter += 1
-        	        ## merge all the dictionaries to one
-        	        dest = dict(chain.from_iterable(map(dict.items, d_lst)))
-        	        njob_lst.append(len(d_lst))
-        	        ## write to .yaml file and close
-        	        file=open("config_{0}.yaml".format(str(filecounter)),"w")
-        	        yaml.dump(dest,file, allow_unicode=True, default_flow_style=None)
-        	        file.close()
-        	        
-        	        ## reset jobcounter and d_lst
-        	        jobcounter = 0
-        	        d_lst = []
+            jobcounter += 1
+            d = {"job_{0}".format(jobcounter):
+                 {"init_date": pd.to_datetime(init_date).strftime("%Y%m%d"),
+                  "data_name": "{0}".format(data_name),
+                  "lead": "{0}".format(str(lead).zfill(3)),
+                  "ens": ens
+                  }}
+            d_lst.append(d)
+            
+            if (jobcounter == 999):
+                filecounter += 1
+                ## merge all the dictionaries to one
+                dest = dict(chain.from_iterable(map(dict.items, d_lst)))
+                njob_lst.append(len(d_lst))
+                ## write to .yaml file and close
+                file=open("config_{0}.yaml".format(str(filecounter)),"w")
+                yaml.dump(dest,file, allow_unicode=True, default_flow_style=None)
+                file.close()
+                
+                ## reset jobcounter and d_lst
+                jobcounter = 0
+                d_lst = []
         
 ## now save the final config
 filecounter += 1

@@ -11,11 +11,11 @@
 #SBATCH --job-name=download_GEFS
 #SBATCH --mail-type=ALL # Type of email notification- BEGIN,END,FAIL,ALL
 #SBATCH --mail-user=dnash@ucsd.edu # Email to which notifications will be sent
-#SBATCH --array=1-281%100 # runs jobs x-y, 100 at a time
+#SBATCH --array=869-999%100 # runs jobs x-y, 100 at a time
 
 # Activate Anaconda work environment
 source /home/${USER}/.bashrc
 source activate eaton-scripps-CO
  
-linevar=`sed $SLURM_ARRAY_TASK_ID'q;d' calls_2.txt`
+linevar=`sed $SLURM_ARRAY_TASK_ID'q;d' calls_5.txt`
 eval $linevar
