@@ -27,7 +27,7 @@ filecounter = 0
 d_lst = []
 dest_lst = []
 njob_lst = []
-for i, init_date in enumerate(init_date_lst):
+for i, (init_date, lead) in enumerate(zip(init_date_lst, lead_lst)):
     for j, data_name in enumerate(data_name_lst):
         if data_name == 'pgrb2a':
             ens_lst = ['geavg']
@@ -41,6 +41,7 @@ for i, init_date in enumerate(init_date_lst):
             d = {"job_{0}".format(jobcounter):
                  {"init_date": pd.to_datetime(init_date).strftime("%Y%m%d"),
                   "data_name": "{0}".format(data_name),
+                  "lead": "{0}".format(str(lead).zfill(3)),
                   "ens": ens
                   }}
             d_lst.append(d)
