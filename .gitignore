@@ -114,5 +114,7 @@ preprocess/concat_mclimate/slurm_out/*
 downloads/GEFS/slurm_out/*
 downloads/WRF/slurm_out/* 
 preprocess/GEFS/slurm_out/*
+analysis/compare_mclimate_to_reforecast/slurm_out/*
+*.yaml
 *.pyc
 modules/__pycache__/*

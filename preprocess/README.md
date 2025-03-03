@@ -1,18 +1,13 @@
 ## Preprocessing Scripts for SEAK AR Impacts Analysis
 
-1. preprocess_AR_6-hourly.py
+After downloading the data (see `../downloads/` for more information), run these preprocessing scripts in this order.
 
-This script generates a .csv 6-hourly and daily time series of days an AR makes landfall in southeast Alaska 
+1. **Preprocess GEFSv12_reforecast (2000--2019):** this takes the raw GEFSv12 reforecast data and computes and saves intermediate data for integrated water vapor transport (IVT; kg m-1 s-1), height of the freezing level (m), and 1000 hPa wind (m s-1). The scripts for this can be found in the `GEFSv12_reforecast` directory.
 
-2. create_job_configs.py
+2. **Calculate Model Climate:** this takes the preprocessed GEFSv12 reforecast data and computes the model climate for all three variables for 365 days of the year. For each day of the year (1 Jan to 31 Dec, excluding 29 Feb), forecast lead time (every 6-hr from 6—168 hr), and variable, we computed the the minimum, 75th, 90th, 91st, 92nd, 93rd, 94th, 95th, 96th, 97th, 98th, 99th, and maximum percentile ranks for values within a 45-day period of the day of year. The scripts for this can be found in the `calculate_mclimate` directory.
 
-This script creates a .yaml and .txt file for each of the variables (e.g., freezing level, precipitation, and IVT). The .yaml file is a dictionary of the parameters needed to run download_and_preprocess_GEFSv12_var.py and the .txt file is the call to run via job array in SLURM. 
-    
-3. run_prep_var.slurm
+3. **Preprocess GEFS data (2020--present):** this takes the raw GEFS data and computes and saves intermediate data for integrated water vapor transport (IVT; kg m-1 s-1), height of the freezing level (m), and 1000 hPa wind (m s-1). The scripts for this can be found in the `GEFS` directory.
 
-This script uses SLURM and job array to download and preprocess IVT, freezing level, and precipitation for GEFSv12. This script relies on the .yaml and .txt files generated from create_job_configs.py
-
-3. preprocess_database.py
-
-This script connects tARget v3 (AR duration data), GEFSv12 (IVT, precipitation, snow level), impact data (NWS), and ASOS/COOP (precipitation) data into a single dataframe and saves as a .csv for each station. 
+4. **Compare the forecast/reforecast to the model climate:** for a list of dates with an observed impacts
+5. 
 

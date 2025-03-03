@@ -18,9 +18,8 @@ ddict = config[config_name]
 
 init_date = ddict['init_date']
 data_name = ddict['data_name']
-lead = ddict['lead']
 ens = ddict['ens']
 
 ## run download_GEFS.sh to download data 
 bash_script = "/home/dnash/repos/SEAK_AR_impacts/downloads/GEFS/download_GEFS.sh"
-print(subprocess.run([bash_script, init_date, data_name, lead, ens]))
+print(subprocess.run([bash_script, init_date, data_name, ens]))

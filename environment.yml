@@ -21,5 +21,6 @@ dependencies:
   - cfgrib
   - richdem
   - wrf-python
+  - bottleneck
       
 
