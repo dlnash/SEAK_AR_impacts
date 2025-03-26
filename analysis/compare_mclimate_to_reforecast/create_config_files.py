@@ -11,46 +11,8 @@ import numpy as np
 import yaml
 from itertools import chain
 
-## load landslide data
-fname = path_to_data + 'downloads/Landslide_Data.csv'
-df = pd.read_csv(fname)
-df = df.set_index(pd.to_datetime(df['Day_min']))
-## subset to dates between 2000 and 2024
-idx = (df.index >= '2000-01-01') & (df.index <= '2024-12-31')
-df = df.loc[idx]
-
-## get unique dates - these are the impact dates
-unique_dates = df.index.unique()
-unique_dates = unique_dates.sort_values()
-
-## create list of init dates we need 
-## we will run mclimate based on these dates and lead times
-## for each impact date
-## for initialization date 1-7 days before impact date
-## F000, F024, F072, ...
-date_lst = []
-impact_date_lst = []
-model_lst = []
-for i, date in enumerate(unique_dates):
-    ## skip 2 events - 20200227, 20200817
-    ## the data from GEFS was too hard to download for these dates
-    if (date.strftime("%Y%m%d") == '20200227') | (date.strftime("%Y%m%d") == '20200817'):
-        pass
-    else:
-        for j, init_lead in enumerate(np.arange(1, 8)):
-            init_date = date - pd.to_timedelta(init_lead, unit='D')
-            date_lst.append(init_date)
-            impact_date_lst.append(date)
-    
-            if init_date.year < 2020:
-                model_name = 'GEFSv12_reforecast'
-            else:
-                model_name = 'GEFS_archive'
-    
-            model_lst.append(model_name)
-
-d = {'impact_date': impact_date_lst, 'init_date': date_lst, 'model_name': model_lst}
-df = pd.DataFrame(d)
+## read unique landslide dates from csv
+df = pd.read_csv('../../out/landslide_dates.csv')
 
 jobcounter = 0
 filecounter = 0
@@ -62,9 +24,9 @@ njob_lst = []
 for index, row in df.iterrows():
     jobcounter += 1
     
-    init_date = row.init_date.strftime('%Y%m%d')
+    init_date = row.init_date
     model = row.model_name
-    impact_date = row.impact_date.strftime('%Y%m%d')
+    impact_date = row.impact_date
     
     d = {"job_{0}".format(jobcounter):
          {"init_date": init_date,
