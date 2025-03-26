@@ -1,0 +1,130 @@
+######################################################################
+# Filename:    create_lst_landslide_dates.py
+# Author:      Deanna Nash dnash@ucsd.edu
+# Description: Script to create .csv of unique landslide dates to compare M-Climate values and create historical maps for
+#
+######################################################################
+
+# Standard Python modules
+import os, sys
+import glob
+import numpy as np
+import pandas as pd
+import xarray as xr
+
+path_to_data = '/expanse/nfs/cw3e/cwp140/'
+path_to_out  = '../out/'       # output files (numerical results, intermediate datafiles) -- read & write
+
+#####################################################
+### LANDSLIDE DATES FROM USGS NEWSWORTHY DATABASE ###
+#####################################################
+fname = path_to_data + 'downloads/SEAK_News_Reported_Landslides.csv'
+df = pd.read_csv(fname)
+df = df.set_index(pd.to_datetime(df['Day_min']))
+## subset to dates between 2000 and 2024
+idx = (df.index >= '2000-01-01') & (df.index <= '2024-12-31')
+df = df.loc[idx]
+print(len(df))
+## get unique dates - these are the impact dates
+unique_dates2 = df.index.unique()
+unique_dates2 = unique_dates2.sort_values()
+len(unique_dates2)
+
+###################################################
+### LANDSLIDE DATES FROM NOAA STORM EVENTS DATA ###
+###################################################
+## glob files in directory since they have weird names
+fname_pattern = path_to_data + 'downloads/noaastormevents/StormEvents_details-ftp_*.csv'
+fname_lst = glob.glob(fname_pattern, recursive=False)
+df_lst = []
+for i, fname in enumerate(sorted(fname_lst)):
+    print(fname)
+    df = pd.read_csv(fname, header=0)
+    ## subset to Juneau WFO
+    idx = (df.WFO == 'AJK')
+    df = df.loc[idx]
+
+    ## debris flow specific
+    idx = df['EVENT_TYPE'] == 'Debris Flow'
+    deb_flow = df.loc[idx]
+    ## filter by keywords
+    idx = (df['EVENT_NARRATIVE'].str.contains('mudslide')) | \
+          (df['EVENT_NARRATIVE'].str.contains('debris flow')) | \
+          (df['EVENT_NARRATIVE'].str.contains('landslide')) | \
+          (df['EVENT_NARRATIVE'].str.contains('mass wasting')) | \
+          (df['EPISODE_NARRATIVE'].str.contains('mudslide')) | \
+          (df['EPISODE_NARRATIVE'].str.contains('debris flow')) | \
+          (df['EPISODE_NARRATIVE'].str.contains('landslide')) | \
+          (df['EPISODE_NARRATIVE'].str.contains('mass wasting'))
+        
+    df = df.loc[idx]
+    df_lst.append(df)
+    df_lst.append(deb_flow)
+
+df = pd.concat(df_lst)
+# ## set begin date to index
+# Convert 'YearMonth' to datetime and extract year and month
+df['YearMonth'] = pd.to_datetime(df['BEGIN_YEARMONTH'], format='%Y%m')
+df['Year'] = df['YearMonth'].dt.year
+df['Month'] = df['YearMonth'].dt.month
+df['Day'] = pd.to_datetime(df['BEGIN_DAY'], format='%d').dt.day
+
+# Create datetime column
+df['DateTime'] = pd.to_datetime(df[['Year', 'Month', 'Day']])
+df = df.set_index(pd.to_datetime(df['DateTime']))
+# ## subset to start_date and end_date
+idx = (df.index >= '2000-01-01') & (df.index <= '2024-12-31')
+df = df.loc[idx]
+print(len(df))
+## get unique list of dates
+unique_dates3 = df.index.unique()
+unique_dates3 = unique_dates3.sort_values()
+print(len(unique_dates3))
+
+## COMBINE NEWSWORTHY LANDSLIDE DATES WITH NOAA STORM EVENTS DATES
+combined_dt_array = np.concatenate((unique_dates2.values, unique_dates3.values))
+d = {'dates': combined_dt_array}
+dates = pd.DataFrame(d)
+final_dates_lst = dates['dates'].unique()
+
+## create list of init dates we need 
+## we will run mclimate based on these dates and lead times
+## for each impact date
+## for initialization date 1-7 days before impact date
+## F000, F024, F072, ...
+date_lst = []
+impact_date_lst = []
+model_lst = []
+F_lst = []
+for i, date in enumerate(final_dates_lst):
+    ## skip 2 events - 20200227, 20200817
+    ## the data from GEFS was too hard to download for these dates
+    if (date.strftime("%Y%m%d") == '20200227') | (date.strftime("%Y%m%d") == '20200817'):
+        pass
+    else:
+        for j, init_lead in enumerate(np.arange(1, 8)):
+            F_lst.append(init_lead*24) # lead in hours
+            init_date = date - pd.to_timedelta(init_lead, unit='D')
+            date_lst.append(init_date)
+            impact_date_lst.append(date)
+            
+            if init_date.year < 2020:
+                model_name = 'GEFSv12_reforecast'
+            else:
+                model_name = 'GEFS_archive'
+    
+            model_lst.append(model_name)
+
+d = {'impact_date': impact_date_lst, 'init_date': date_lst, 'model_name': model_lst, 'F': F_lst}
+df = pd.DataFrame(d)
+
+varname_lst = ['impact_date', 'init_date']
+for i, varname in enumerate(varname_lst):
+    # Convert string to datetime objects (assuming format is YYYY-MM-DD)
+    df[varname] = pd.to_datetime(df[varname])
+
+    # Format datetime objects to a different string format (e.g., YYYYMMDD)
+    df[varname] = df[varname].dt.strftime('%Y%m%d')
+
+out_fname = path_to_out + 'landslide_dates.csv'
+df.to_csv(out_fname, index=False)

@@ -133,6 +133,7 @@ for i, F in enumerate(F_lst):
     path_to_final_data = '/expanse/nfs/cw3e/cwp140/preprocessed/GEFS/GEFS/'
     varlst = ['UV1000', 'IVT', 'freezing_level']
     for i, varname in enumerate(varlst):
+        print('Copying preprocessed data for init: {0}, F{1}, {2}'.format(init_date, F, varname))
         fname = '{0}.t00z.0p50.f{1}.{2}'.format(init_date, F, varname)
         inname = path_to_out + fname
         outname = path_to_final_data + fname
