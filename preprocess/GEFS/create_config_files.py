@@ -17,7 +17,7 @@ from itertools import chain
 # lead_lst = np.arange(6, 246, 6)
 
 df = pd.read_csv('../../out/GEFS_dates_download.csv')
-init_date_lst = df.d.values
+init_date_lst = df.init_date.values
 lead_lst = df.F.values
 
 jobcounter = 0
@@ -31,7 +31,7 @@ njob_lst = []
 for i, (init_date, lead) in enumerate(zip(init_date_lst, lead_lst)):
         jobcounter += 1
         d = {"job_{0}".format(jobcounter):
-             {"init_date": pd.to_datetime(init_date).strftime("%Y%m%d"),
+             {"init_date": pd.to_datetime(init_date, format="%Y%m%d").strftime("%Y%m%d"),
               "F": "{0}".format(str(lead).zfill(3))
               }}
         d_lst.append(d)

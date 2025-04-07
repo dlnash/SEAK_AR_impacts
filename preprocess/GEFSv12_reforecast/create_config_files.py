@@ -14,7 +14,7 @@ from itertools import chain
 
 ## for each year between 2000 and 2019
 date_lst = []
-for i, yr in enumerate(range(2000, 2001)):
+for i, yr in enumerate(range(2015, 2016)):
     # ## get 55 days before November 21
     # center_date = '{0}-11-21'.format(yr)
     # center_date = pd.to_datetime(center_date)
@@ -26,8 +26,8 @@ for i, yr in enumerate(range(2000, 2001)):
     # date_lst.append(dates)
 
     ## get the rest of the year
-    start_date = pd.to_datetime('{0}-01-01'.format(yr))
-    end_date = pd.to_datetime('{0}-01-06'.format(yr))
+    start_date = pd.to_datetime('{0}-08-11'.format(yr))
+    end_date = pd.to_datetime('{0}-08-16'.format(yr))
     
     ## make a list of dates between start_date and end_date
     dates = pd.date_range(start_date, end_date, freq='1D')

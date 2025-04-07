@@ -16,7 +16,7 @@ from itertools import chain
 
 # init_date_lst = ['20240919']
 df = pd.read_csv('../../out/GEFS_dates_download.csv')
-init_date_lst = df.d.values
+init_date_lst = df.init_date.values
 lead_lst = df.F.values
 data_name_lst = ['pgrb2a', 'pgrb2b']
 # lead_lst = np.arange(6, 246, 6)
@@ -39,7 +39,7 @@ for i, (init_date, lead) in enumerate(zip(init_date_lst, lead_lst)):
         for k, ens in enumerate(ens_lst):    
             jobcounter += 1
             d = {"job_{0}".format(jobcounter):
-                 {"init_date": pd.to_datetime(init_date).strftime("%Y%m%d"),
+                 {"init_date": pd.to_datetime(init_date, format="%Y%m%d").strftime("%Y%m%d"),
                   "data_name": "{0}".format(data_name),
                   "lead": "{0}".format(str(lead).zfill(3)),
                   "ens": ens

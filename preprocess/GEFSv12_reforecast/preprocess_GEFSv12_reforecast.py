@@ -11,6 +11,7 @@ import os, sys
 import yaml
 import xarray as xr
 import numpy as np
+import shutil
 
 path_to_repo = '/home/dnash/repos/SEAK_AR_impacts/'
 sys.path.append(path_to_repo+'modules')
@@ -24,7 +25,7 @@ ddict = config[job_info] # pull the job info from the dict
 
 year = ddict['year']
 date = ddict['date']
-variable = 'uv1000' ## can be 'ivt', 'freezing_level', or 'uv1000'
+variable = 'freezing_level' ## can be 'ivt', 'freezing_level', or 'uv1000'
 
 for i, st in enumerate(range(0, 80, 8)):
     print(st, st+8)
@@ -81,6 +82,7 @@ for i, st in enumerate(range(0, 80, 8)):
             ds_lst.append(ds)
 
         ds = xr.merge(ds_lst) # merge tmp and hgt data
+        ds = ds.sel(isobaricInhPa=slice(1000, 200)) ## only interested in freezing level below 200 hPa
         ds = gefs.calc_freezing_level(ds) # calculate freezing level (m)
 
 
@@ -94,5 +96,14 @@ for i, st in enumerate(range(0, 80, 8)):
     ## save data to netCDF file
     print('Writing {0} to netCDF ....'.format(date))
     path_to_data = '/expanse/lustre/scratch/dnash/temp_project/mclimate/{0}/'.format(variable)
-    out_fname = path_to_data + '{0}_{3}_F{1}_F{2}.nc'.format(date, start, stop, variable) 
-    ds.load().to_netcdf(path=out_fname, mode = 'w', format='NETCDF4')
+    fname = '{0}_{3}_F{1}_F{2}.nc'.format(date, start, stop, variable) 
+    ds.load().to_netcdf(path=path_to_data + fname, mode = 'w', format='NETCDF4')
+
+
+    ### COPY FROM LUSTRE TO MAIN SPACE
+    path_to_final_data = '/expanse/nfs/cw3e/cwp140/preprocessed/GEFSv12_reforecast/{0}/'.format(variable)
+    print('Copying preprocessed data...')
+    inname = path_to_data + fname
+    outname = path_to_final_data + fname
+    print('... {0} to {1}'.format(inname, outname))
+    shutil.copy(inname, outname) # copy file over to data folder

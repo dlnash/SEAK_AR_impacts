@@ -85,6 +85,9 @@ print(len(unique_dates3))
 combined_dt_array = np.concatenate((unique_dates2.values, unique_dates3.values))
 d = {'dates': combined_dt_array}
 dates = pd.DataFrame(d)
+## add special date for paper (this is NOT A LANDSLIDE DATE)
+new_row = pd.DataFrame([{'dates': pd.to_datetime('2024-09-23', format='%Y-%m-%d')}])
+dates = pd.concat([dates, new_row], ignore_index=True)
 final_dates_lst = dates['dates'].unique()
 
 ## create list of init dates we need 
@@ -128,3 +131,13 @@ for i, varname in enumerate(varname_lst):
 
 out_fname = path_to_out + 'landslide_dates.csv'
 df.to_csv(out_fname, index=False)
+
+## subset to GEFS archive dates for download script
+df = df.set_index(pd.to_datetime(df['init_date'], format='%Y%m%d'))
+
+# subset to 2020-2024
+idx = (df.index >= '2020-01-01') & (df.index <= '2024-12-31')
+tmp = df.loc[idx]
+
+# Save as CSV
+tmp.to_csv(path_to_out+'GEFS_dates_download.csv', index=False)
