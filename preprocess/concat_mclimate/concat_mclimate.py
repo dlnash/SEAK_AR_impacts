@@ -13,7 +13,7 @@ import glob
 import pandas as pd
 
 path_to_data = '/expanse/nfs/cw3e/cwp140/'     # project data -- read only
-varname = 'uv1000'
+varname = 'prec'
 
 config_file = str(sys.argv[1]) # this is the config file name
 job_info = str(sys.argv[2]) # this is the job name

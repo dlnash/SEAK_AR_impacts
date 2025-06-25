@@ -72,7 +72,7 @@ print(start_date, end_date)
 ## load all days from the new subset
 ## create list of fnames
 fname_lst = []
-varname = 'uv1000' ## ivt, uv1000, 'freezing_level'
+varname = 'prec' ## ivt, uv1000, 'freezing_level' or 'prec'
 
 scratch_path = '/expanse/lustre/scratch/dnash/temp_project/mclimate/{0}/'.format(varname)
 # scratch_path = path_to_data + 'preprocessed/GEFSv12_reforecast/{0}/'.format(varname)
@@ -82,8 +82,12 @@ print('Gathering filenames ...')
 for i, dt in enumerate(final_lst):
     ts = pd.to_datetime(str(dt)) 
     d = ts.strftime("%Y%m%d")
-    F1, F2 = get_filename_GEFSv12_reforecast(F)
-    fname = scratch_path + '{1}_{0}_F{2}_F{3}.nc'.format(varname, d, F1, F2)
+
+    if varname == 'prec':
+        fname = scratch_path + '{1}_{0}.nc'.format(varname, d)
+    else:
+        F1, F2 = get_filename_GEFSv12_reforecast(F)
+        fname = scratch_path + '{1}_{0}_F{2}_F{3}.nc'.format(varname, d, F1, F2)
     fname_lst.append(fname)
 
 ### Read the dataset
@@ -94,18 +98,18 @@ idx = np.timedelta64(int(np.timedelta64(F, 'h')/np.timedelta64(1, 'ns')), 'ns')
 
 def preprocess_ivt(ds):
     ds = ds.drop_vars(["ivtu", "ivtv"])
-    ds = ds.sel(step=idx) # select the 24 hr lead step
+    ds = ds.sel(step=idx) # select the specific lead step
     return ds
 
 def preprocess_uv1000(ds):
     uv = np.sqrt(ds.u**2 + ds.v**2)
     ds = ds.assign(uv=(['number', 'step', 'lat','lon'],uv.data))
     ds = ds.drop_vars(["u", "v"])
-    ds = ds.sel(step=idx) # select the 24 hr lead step
+    ds = ds.sel(step=idx) # select the specific lead step
     return ds
 
 def preprocess_freezing_level(ds):
-    ds = ds.sel(step=idx) # select the 24 hr lead step   
+    ds = ds.sel(step=idx) # select the specificlead step   
     return ds
 
 if varname == 'ivt':
@@ -116,9 +120,15 @@ elif varname == 'uv1000':
     ## use xr.open_mfdataset to read all the files within that ssn clim
     ds = xr.open_mfdataset(fname_lst, concat_dim="valid_time", combine="nested", engine='netcdf4', chunks={"lat": 100, "lon": 100}, preprocess=preprocess_uv1000)
 
-elif varname == 'freezing_level':
+elif (varname == 'freezing_level'):
     ## use xr.open_mfdataset to read all the files within that ssn clim
     ds = xr.open_mfdataset(fname_lst, concat_dim="valid_time", combine="nested", engine='netcdf4', chunks={"lat": 100, "lon": 100}, preprocess=preprocess_freezing_level)
+
+elif varname == 'prec':
+    ## use xr.open_mfdataset to read all the files within that ssn clim
+    ds = xr.open_mfdataset(fname_lst, concat_dim="valid_time", 
+                       combine="nested", engine='netcdf4', chunks={"lat": 100, "lon": 100},
+                       preprocess=preprocess_freezing_level)
 
 print('Calculating quantiles...')
 ## need to rechunk so time is a single chunk
@@ -141,7 +151,7 @@ mclimate = mclimate.assign_coords(dayofyear=period.day_of_year)
 mclimate = mclimate.expand_dims('dayofyear')
 
 # write to netCDF
-fname = os.path.join('/expanse/lustre/scratch/dnash/temp_project/uv1000_mclimate/GEFSv12_reforecast_mclimate_{3}_{0}{1}_{2}hr-lead.nc'.format(mon, day, F, varname))
+fname = os.path.join('/expanse/lustre/scratch/dnash/temp_project/{3}_mclimate/GEFSv12_reforecast_mclimate_{3}_{0}{1}_{2}hr-lead.nc'.format(mon, day, F, varname))
 mclimate.load().to_netcdf(path=fname, mode = 'w', format='NETCDF4')
 
 ## remove files from scratch space

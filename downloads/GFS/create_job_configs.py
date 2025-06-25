@@ -19,10 +19,8 @@ df = pd.read_csv('../../out/GEFS_dates_download.csv')
 init_date_lst = df.init_date.values
 lead_lst = df.F.values
 varname = 'QPF'
-if varname == 'QPF':
-    data_name_lst = ['pgrb2a']
-else:
-    data_name_lst = ['pgrb2a', 'pgrb2b']
+data_name_lst = ['pgrb2']
+
 # lead_lst = np.arange(6, 246, 6)
 
 jobcounter = 0
@@ -31,38 +29,27 @@ filecounter = 0
 d_lst = []
 dest_lst = []
 njob_lst = []
-for i, (init_date, lead) in enumerate(zip(init_date_lst, lead_lst)):
-    for j, data_name in enumerate(data_name_lst):
-        if data_name == 'pgrb2a':
-            ens_lst = ['geavg']
-        else:
-            ens_lst = ['gec00']
-            for e, ens_mem in enumerate(np.arange(1, 31, 1)):
-                ens = 'gep{0}'.format(str(ens_mem).zfill(2))
-                ens_lst.append(ens)
-        for k, ens in enumerate(ens_lst):    
-            jobcounter += 1
-            d = {"job_{0}".format(jobcounter):
-                 {"init_date": pd.to_datetime(init_date, format="%Y%m%d").strftime("%Y%m%d"),
-                  "data_name": "{0}".format(data_name),
-                  "lead": "{0}".format(str(lead).zfill(3)),
-                  "ens": ens
-                  }}
-            d_lst.append(d)
-            
-            if (jobcounter == 999):
-                filecounter += 1
-                ## merge all the dictionaries to one
-                dest = dict(chain.from_iterable(map(dict.items, d_lst)))
-                njob_lst.append(len(d_lst))
-                ## write to .yaml file and close
-                file=open("config_{0}.yaml".format(str(filecounter)),"w")
-                yaml.dump(dest,file, allow_unicode=True, default_flow_style=None)
-                file.close()
-                
-                ## reset jobcounter and d_lst
-                jobcounter = 0
-                d_lst = []
+for i, init_date in enumerate(init_date_lst):
+    jobcounter += 1
+    d = {"job_{0}".format(jobcounter):
+         {"init_date": pd.to_datetime(init_date, format="%Y%m%d").strftime("%Y%m%d"),
+          "data_name": 'pgrb2',
+          }}
+    d_lst.append(d)
+    
+    if (jobcounter == 999):
+        filecounter += 1
+        ## merge all the dictionaries to one
+        dest = dict(chain.from_iterable(map(dict.items, d_lst)))
+        njob_lst.append(len(d_lst))
+        ## write to .yaml file and close
+        file=open("config_{0}.yaml".format(str(filecounter)),"w")
+        yaml.dump(dest,file, allow_unicode=True, default_flow_style=None)
+        file.close()
+        
+        ## reset jobcounter and d_lst
+        jobcounter = 0
+        d_lst = []
         
 ## now save the final config
 filecounter += 1
@@ -79,7 +66,7 @@ file.close()
 for i, njobs in enumerate(njob_lst):
     call_str_lst = []
     for j, job in enumerate(range(1, njobs+1, 1)):
-        call_string = "python getGEFS_batch.py config_{0}.yaml 'job_{1}'".format(i+1, j+1)
+        call_string = "python getGFS_batch.py config_{0}.yaml 'job_{1}'".format(i+1, j+1)
         call_str_lst.append(call_string)
         
     ## now write those lines to a text file

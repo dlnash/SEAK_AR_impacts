@@ -34,7 +34,7 @@ len(unique_dates2)
 ### LANDSLIDE DATES FROM NOAA STORM EVENTS DATA ###
 ###################################################
 ## glob files in directory since they have weird names
-fname_pattern = path_to_data + 'downloads/noaastormevents/StormEvents_details-ftp_*.csv'
+fname_pattern = path_to_data + 'downloads/noaastormevents/StormEvents_details-ftp_v1.0_d20*.csv'
 fname_lst = glob.glob(fname_pattern, recursive=False)
 df_lst = []
 for i, fname in enumerate(sorted(fname_lst)):

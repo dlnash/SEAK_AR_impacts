@@ -17,36 +17,7 @@ PATH_TO_OUT="/expanse/lustre/scratch/dnash/temp_project/downloaded/GEFS/${INIT_D
 PATH_TO_DATA="s3://noaa-gefs-pds/gefs.${INIT_DATE}/00/atmos/${DATA_NAME}p5/"
 # PATH_TO_DATA="s3://noaa-gefs-pds/gefs.${INIT_DATE}/00/${DATA_NAME}/"
 
-lead_array=(
-006
-012
-018
-024
-030
-036
-042
-048
-054
-060
-066
-072
-078
-084
-090
-096
-102
-108
-114
-120
-126
-132
-138
-144
-150
-156
-162
-168
-)
+lead_array=($(seq -f "%03g" 3 3 168)) ## every F from 3-168 every 3 hours
 ## outer loop - loop through ensemble members
 for i in ${!lead_array[*]}
 do

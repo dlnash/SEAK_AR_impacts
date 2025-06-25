@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH --account=cwp140
+#SBATCH --account=CWP162
 #SBATCH --constraint="lustre"
 #SBATCH --partition=cw3e-shared
 #SBATCH -N 1 # Ensure that all cores are on one machine
@@ -19,5 +19,5 @@
 source /home/${USER}/.bashrc
 source activate SEAK-impacts
  
-linevar=`sed $SLURM_ARRAY_TASK_ID'q;d' calls_12.txt`
+linevar=`sed $SLURM_ARRAY_TASK_ID'q;d' calls_15.txt`
 eval $linevar

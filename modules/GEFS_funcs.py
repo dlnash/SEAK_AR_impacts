@@ -9,6 +9,23 @@ import xarray as xr
 import numpy as np
 import pandas as pd
 
+
+def calc_prec_rate(ds):
+    ## convert precipitation to mm per hour
+    ts_3hr = pd.timedelta_range(start='0 day', periods=57, freq='3H')
+    ts_6hr = pd.timedelta_range(start='0 day', periods=29, freq='6H')
+    tp = ds.tp ## pull out tp
+    prec_3hr = tp.sel(step=ts_3hr[1::2]) ## grab only the 3hr values
+    tp2 = tp.diff(dim='step') ## calculate difference in precip
+    ## the values for 6hr timesteps are correct, the values for 3hr timesteps are incorrect
+    prec_6hr = tp2.sel(step=ts_6hr[1:]) # grab only the 6hr values
+    new_prec = prec_3hr.combine_first(prec_6hr) # combine the correct 3hr values with the correct 6hr values
+    ds = ds.drop_vars(["tp"]) # get rid of old tp (accumulated variable)
+    ds = xr.merge([ds, new_prec]) # merge dataset with new tp
+
+    return ds
+
+    
 def read_GEFS_pres_grb(F, vardict, path_to_data):
     
     ## open pgrb2a data

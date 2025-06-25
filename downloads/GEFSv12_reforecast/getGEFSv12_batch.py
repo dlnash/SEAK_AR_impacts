@@ -18,7 +18,7 @@ ddict = config[config_name]
 
 year = ddict['year']
 date = ddict['date']
-varname = 'freezing_level' ## can be 'ivt', 'freezing_level', 'prec', 'uv1000'
+varname = 'prec' ## can be 'ivt', 'freezing_level', 'prec', 'uv1000'
 
 ## run download_GEFSv12_reforecast.sh to download data 
 bash_script = "/home/dnash/repos/SEAK_AR_impacts/downloads/GEFSv12_reforecast/download_GEFSv12_reforecast.sh"

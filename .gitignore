@@ -109,12 +109,8 @@ auxhist*
 *.gif
 
 core*
-preprocess/organize_data/slurm_out/*
-preprocess/concat_mclimate/slurm_out/*
-downloads/GEFS/slurm_out/*
-downloads/WRF/slurm_out/* 
-preprocess/GEFS/slurm_out/*
-analysis/compare_mclimate_to_reforecast/slurm_out/*
+**/slurm_out/*
 *.yaml
 *.pyc
-modules/__pycache__/*
+**/.ipynb_checkpoints/
+**/__pycache__/*
