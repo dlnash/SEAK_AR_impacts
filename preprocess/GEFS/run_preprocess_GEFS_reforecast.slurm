@@ -12,7 +12,7 @@
 #SBATCH --job-name=preprocess_GEFS
 #SBATCH --mail-type=ALL # Type of email notification- BEGIN,END,FAIL,ALL
 #SBATCH --mail-user=dnash@ucsd.edu # Email to which notifications will be sent
-#SBATCH --array=1-4%4 # runs jobs x-y, 100 at a time
+#SBATCH --array=1-11%11 # runs jobs x-y, 100 at a time
 
 # Activate Anaconda work environment
 source /home/${USER}/.bashrc

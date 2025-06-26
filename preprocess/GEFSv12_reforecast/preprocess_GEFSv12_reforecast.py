@@ -26,9 +26,9 @@ ddict = config[job_info] # pull the job info from the dict
 
 year = ddict['year']
 date = ddict['date']
-variable = 'prec' ## can be 'ivt', 'freezing_level', 'uv1000', or 'prec'
+variable = 'freezing_level' ## can be 'ivt', 'freezing_level', 'uv1000', or 'prec'
 
-if variable == 'prec':
+if variable == 'qpf':
     path_to_data = "/expanse/lustre/scratch/dnash/temp_project/downloaded/GEFSv12_reforecast/{0}/".format(date)
 
     ## read the control

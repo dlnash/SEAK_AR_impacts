@@ -10,7 +10,7 @@ import pandas as pd
 import xarray as xr
 from datetime import timedelta
 from scipy.integrate import trapezoid
-# import wrf
+from wrf import interplevel
 import glob
 import re
 # import dask
@@ -105,7 +105,7 @@ def read_and_regrid_prs_var(varname, date, year, start, stop):
     # read data below 700 mb - 0.25 degree
     fname = path_to_data+"{0}_pres_{1}00*.grib2".format(varname, date)
     partial_func = partial(_preprocess, start=start, stop=stop)
-    
+    print(fname)
     try:
         ds_below = xr.open_mfdataset(fname, engine='cfgrib', concat_dim="number", combine='nested', preprocess=partial_func)
     except ValueError:
@@ -306,7 +306,7 @@ def calc_freezing_level(ds):
     t = ds.t.values-273.15 # convert to *C
 
     # interpolate gh to temperature = 0
-    interp_var = wrf.interplevel(gh, t, [0])
+    interp_var = interplevel(gh, t, [0])
 
     # put into a dataset
     lat = ds.latitude.values
