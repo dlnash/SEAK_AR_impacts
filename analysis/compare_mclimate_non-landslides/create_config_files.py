@@ -1,39 +1,19 @@
 ######################################################################
 # Filename:    create_job_configs.py
 # Author:      Deanna Nash dnash@ucsd.edu
-# Description: Script to create .yaml configuration file to run job_array with slurm for comparing M-Climate to GEFSv12 Reforecast Data
+# Description: Script to create .yaml configuration file to run job_array with slurm for comparing mclimate to reforecast for high impact dates
 #
 ######################################################################
 
 ## import libraries
 import pandas as pd
-from datetime import timedelta
 import numpy as np
 import yaml
 from itertools import chain
 
-## get list of all AR days
-# fname = '../../out/SEAK_ardates_daily.csv'
-# ar_df = pd.read_csv(fname) # read in AR dates
-# idx = (ar_df.AR == 1)
-# ar_df = ar_df.loc[idx]
-# # reset the index as "time"
-# ar_df = ar_df.set_index(pd.to_datetime(ar_df['Unnamed: 0']))
-# ## subset dates to Jan 2000 - Dec 2019
-# idx = (ar_df.index.year >= 2000) & (ar_df.index.year <= 2019)
-# ar_df = ar_df.loc[idx]
-# ar_dates = ar_df.index.values
-
-fname = '../../out/high_impact_precip_dates_all.csv'
-ar_df = pd.read_csv(fname) # read in AR dates
-ar_df = ar_df.set_index(pd.to_datetime(ar_df['dates']))
-ar_dates = ar_df.index.values
-
-dates_new = []
-for i, date in enumerate(ar_dates):
-    ts = pd.to_datetime(str(date))
-    t = ts.strftime('%Y%m%d')
-    dates_new.append(t)
+## read unique landslide dates from csv
+df = pd.read_csv('../../out/non-landslide_dates.csv')
+df['init_date'] = pd.to_datetime(df['init_date'], format='%Y-%m-%d')
 
 jobcounter = 0
 filecounter = 0
@@ -41,11 +21,16 @@ filecounter = 0
 d_lst = []
 dest_lst = []
 njob_lst = []
-for i, date in enumerate(dates_new):
-    jobcounter += 1
 
-    d = {'job_{0}'.format(jobcounter):
-         {'date': date
+for index, row in df.iterrows():
+    jobcounter += 1
+    
+    init_date = row.init_date.strftime("%Y%m%d")
+    model = 'GEFSv12_reforecast'
+    
+    d = {"job_{0}".format(jobcounter):
+         {"init_date": init_date,
+          "model_name": model
           }}
     d_lst.append(d)
     
@@ -78,7 +63,7 @@ file.close()
 for i, njobs in enumerate(njob_lst):
     call_str_lst = []
     for j, job in enumerate(range(1, njobs+1, 1)):
-        call_string = "python compare_mclimate_reforecast.py config_{0}.yaml 'job_{1}'".format(i+1, j+1)
+        call_string = "python compare_mclimate_forecast.py config_{0}.yaml 'job_{1}'".format(i+1, j+1)
         call_str_lst.append(call_string)
         
     ## now write those lines to a text file

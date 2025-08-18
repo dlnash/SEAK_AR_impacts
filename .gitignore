@@ -112,5 +112,5 @@ core*
 **/slurm_out/*
 *.yaml
 *.pyc
-**/.ipynb_checkpoints/
+**/.ipynb_checkpoints/*
 **/__pycache__/*

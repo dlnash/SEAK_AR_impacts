@@ -11,6 +11,7 @@ import glob
 import numpy as np
 import pandas as pd
 import xarray as xr
+from datetime import datetime, timedelta
 
 path_to_data = '/expanse/nfs/cw3e/cwp140/'
 path_to_out  = '../out/'       # output files (numerical results, intermediate datafiles) -- read & write
@@ -141,3 +142,30 @@ tmp = df.loc[idx]
 
 # Save as CSV
 tmp.to_csv(path_to_out+'GEFS_dates_download.csv', index=False)
+
+##################################################################
+### CREATE A LIST OF DATES WHEN THERE IS NO REPORTED LANDSLIDE ###
+##################################################################
+# Range start and end
+start_date = datetime(2000, 1, 1)
+end_date = datetime(2019, 12, 31)
+
+# Convert existing dates to a set of just date parts for comparison
+existing_date_set = set(d.date() for d in final_dates_lst)
+
+# Generate all dates in the range
+current_date = start_date
+all_dates_in_range = []
+while current_date <= end_date:
+    all_dates_in_range.append(current_date.date())
+    current_date += timedelta(days=1)
+
+# Filter dates that are NOT in existing_date_set
+missing_dates = [d for d in all_dates_in_range if d not in existing_date_set]
+print('Number of days where there is no reported landslides: {0}'.format(len(missing_dates)))
+
+d = {'init_date': pd.to_datetime(missing_dates, format='%Y%m%d')}
+df = pd.DataFrame(d)
+
+out_fname = path_to_out + 'non-landslide_dates.csv'
+df.to_csv(out_fname, index=False)

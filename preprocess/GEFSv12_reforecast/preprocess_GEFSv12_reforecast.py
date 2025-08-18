@@ -12,7 +12,7 @@ import yaml
 import xarray as xr
 import numpy as np
 import pandas as pd
-import shutil
+import subprocess
 
 path_to_repo = '/home/dnash/repos/SEAK_AR_impacts/'
 sys.path.append(path_to_repo+'modules')
@@ -159,4 +159,22 @@ else:
         inname = path_to_data + fname
         outname = path_to_final_data + fname
         print('... {0} to {1}'.format(inname, outname))
-        shutil.copy(inname, outname) # copy file over to data folder
+
+        # Build the command as a list of arguments
+        command = [
+            "rsync",
+            "-avh",        # archive mode, verbose, human-readable sizes
+            inname,
+            outname
+        ]
+        
+        # Run the command
+        result = subprocess.run(command, capture_output=True, text=True)
+        
+        # Check result
+        if result.returncode == 0:
+            print("rsync completed successfully.")
+            print(result.stdout)
+        else:
+            print("rsync failed:")
+            print(result.stderr)
