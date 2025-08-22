@@ -39,6 +39,19 @@ coords = {
 
 ds = xr.Dataset(data, coords=coords)
 
+## load land surface model to mask out ocean values
+fname = '/expanse/nfs/cw3e/cwp140/downloads/GEFSv12_reforecast/landsfc.pgrb2.0p25'
+lsm = xr.open_dataset(fname, engine='cfgrib')
+lsm = lsm.assign_coords({"longitude": (((lsm.longitude + 180) % 360) - 180)}) # Convert DataArray longitude coordinates from 0-359 to -180-179
+lsm = lsm.reindex(latitude=list(reversed(lsm.latitude)))
+lsm = lsm.sel(longitude=slice(ext[0], ext[1]), latitude=slice(ext[2], ext[3]))
+lsm = lsm.rename({"latitude": "lat", "longitude": "lon"})
+# mask is a DataArray of 0s and 1s
+bool_mask = lsm.lsm.astype(bool)
+
+# apply mask across all variables
+masked_ds = ds.where(bool_mask)
+
 ## write to netcdf
 out_fname = '/expanse/nfs/cw3e/cwp140/preprocessed/GEFSv12_reforecast/GEFSv12_slope_aspect.nc'
-ds.to_netcdf(out_fname, format="NETCDF4")
+masked_ds.to_netcdf(out_fname, format="NETCDF4")

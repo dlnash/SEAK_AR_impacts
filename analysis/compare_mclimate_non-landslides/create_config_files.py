@@ -11,9 +11,11 @@ import numpy as np
 import yaml
 from itertools import chain
 
-## read unique landslide dates from csv
-df = pd.read_csv('../../out/non-landslide_dates.csv')
-df['init_date'] = pd.to_datetime(df['init_date'], format='%Y-%m-%d')
+# ## read unique landslide dates from csv
+# df = pd.read_csv('../../out/non-landslide_dates.csv')
+# df['init_date'] = pd.to_datetime(df['init_date'], format='%Y-%m-%d')
+
+dates = pd.date_range(start='2000-01-01', end='2019-12-31')
 
 jobcounter = 0
 filecounter = 0
@@ -22,10 +24,12 @@ d_lst = []
 dest_lst = []
 njob_lst = []
 
-for index, row in df.iterrows():
+# for index, row in df.iterrows():
+for i, date in enumerate(dates):
     jobcounter += 1
     
-    init_date = row.init_date.strftime("%Y%m%d")
+    # init_date = row.init_date.strftime("%Y%m%d")
+    init_date = date.strftime("%Y%m%d")
     model = 'GEFSv12_reforecast'
     
     d = {"job_{0}".format(jobcounter):
