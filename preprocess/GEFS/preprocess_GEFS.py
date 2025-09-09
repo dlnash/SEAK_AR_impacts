@@ -14,7 +14,7 @@ import numpy as np
 import pandas as pd
 import shutil
 
-path_to_repo = '/home/dnash/repos/SEAK_AR_impacts/'
+path_to_repo = '/home/dnash/cwp140/repos/SEAK_AR_impacts/'
 sys.path.append(path_to_repo+'modules')
 import GEFS_funcs as gefs
 
@@ -26,8 +26,8 @@ ddict = config[job_info] # pull the job info from the dict
 
 init_date = ddict['init_date']
 
-
-path_to_data = '/expanse/lustre/scratch/dnash/temp_project/downloaded/GEFS/{0}/'.format(init_date)
+path_to_data = '/cw3e/mead/projects/cwp140/data/downloads/GEFS/{0}/'.format(init_date)
+path_to_out = '/cw3e/mead/projects/cwp140/data/preprocessed/GEFS/'
 
 ## dictionary of variables we need
 gfs_vardict = {
@@ -61,8 +61,7 @@ for i, F in enumerate(F_lst):
     
     ## save data to netCDF file
     print('Writing {0} to netCDF ....'.format('UV1000'))
-    path_to_out = '/expanse/lustre/scratch/dnash/temp_project/preprocessed/GEFS/'
-    out_fname = path_to_out + '{0}.t00z.0p50.f{1}.{2}'.format(init_date, F, 'UV1000')
+    out_fname = path_to_out + '{2}/{0}.t00z.0p50.f{1}.{2}'.format(init_date, F, 'UV1000')
     ds.to_netcdf(path=out_fname, mode = 'w', format='NETCDF4')
     
     ###################
@@ -112,8 +111,7 @@ for i, F in enumerate(F_lst):
     
     ## save data to netCDF file
     print('Writing {0} to netCDF ....'.format('IVT'))
-    path_to_out = '/expanse/lustre/scratch/dnash/temp_project/preprocessed/GEFS/'
-    out_fname = path_to_out + '{0}.t00z.0p50.f{1}.{2}'.format(init_date, F, 'IVT')
+    out_fname = path_to_out + '{2}/{0}.t00z.0p50.f{1}.{2}'.format(init_date, F, 'IVT')
     ds_IVT.to_netcdf(path=out_fname, mode = 'w', format='NETCDF4')
     
     ##############################
@@ -125,22 +123,9 @@ for i, F in enumerate(F_lst):
     
     ## save data to netCDF file
     print('Writing {0} to netCDF ....'.format('Freezing Level'))
-    path_to_out = '/expanse/lustre/scratch/dnash/temp_project/preprocessed/GEFS/'
-    out_fname = path_to_out + '{0}.t00z.0p50.f{1}.{2}'.format(init_date, F, 'freezing_level')
+    out_fname = path_to_out + '{2}/{0}.t00z.0p50.f{1}.{2}'.format(init_date, F, 'freezing_level')
     freezing_level_ds.to_netcdf(path=out_fname, mode = 'w', format='NETCDF4')
-    
-    
-    #######################################
-    ### COPY FILES TO PERMANENT STORAGE ###
-    #######################################
-    path_to_final_data = '/expanse/nfs/cw3e/cwp140/preprocessed/GEFS/GEFS/'
-    varlst = ['UV1000', 'IVT', 'freezing_level']
-    for i, varname in enumerate(varlst):
-        print('Copying preprocessed data for init: {0}, F{1}, {2}'.format(init_date, F, varname))
-        fname = '{0}.t00z.0p50.f{1}.{2}'.format(init_date, F, varname)
-        inname = path_to_out + fname
-        outname = path_to_final_data + fname
-        shutil.copy(inname, outname) # copy file over to data folder
+
 
 ###################
 ### COMPUTE QPF ###
@@ -174,10 +159,6 @@ ds = gefs.calc_prec_rate(ds)
 ## save as netCDF
 ## save data to netCDF file
 print('Writing {0} to netCDF ....'.format('qpf'))
-path_to_out = '/expanse/lustre/scratch/dnash/temp_project/preprocessed/GEFS/'
-out_fname = '{0}.t00z.0p50.f003-f168.{1}'.format(init_date, 'qpf')
-ds.to_netcdf(path=path_to_out + out_fname, mode = 'w', format='NETCDF4')
+out_fname = path_to_out + '{1}/{0}.t00z.0p50.f003-f168.{1}'.format(init_date, 'qpf')
+ds.to_netcdf(path=out_fname, mode = 'w', format='NETCDF4')
 
-## copy to permanent storage
-path_to_final_data = '/expanse/nfs/cw3e/cwp140/preprocessed/GEFS/GEFS/'
-shutil.copy(path_to_out+out_fname, path_to_final_data+out_fname) # copy file over to data folder

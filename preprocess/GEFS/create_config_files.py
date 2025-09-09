@@ -13,8 +13,8 @@ from itertools import chain
 
 ## create list of init dates, data_names, and leads to download in parallel
 
-init_date_lst = ['20241201']
-lead_lst = [6]
+init_date_lst = ['20250808']
+lead_lst = np.arange(6, 168+1, 6)
 
 # df = pd.read_csv('../../out/GEFS_dates_download.csv')
 # init_date_lst = df.init_date.values
@@ -26,9 +26,9 @@ filecounter = 0
 d_lst = []
 dest_lst = []
 njob_lst = []
-# for i, init_date in enumerate(init_date_lst):  
-    # for j, lead in enumerate(lead_lst):
-for i, (init_date, lead) in enumerate(zip(init_date_lst, lead_lst)):
+for i, init_date in enumerate(init_date_lst):  
+    for j, lead in enumerate(lead_lst):
+# for i, (init_date, lead) in enumerate(zip(init_date_lst, lead_lst)):
         jobcounter += 1
         d = {"job_{0}".format(jobcounter):
              {"init_date": pd.to_datetime(init_date, format="%Y%m%d").strftime("%Y%m%d"),

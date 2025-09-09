@@ -12,8 +12,9 @@ import numpy as np
 import pandas as pd
 import xarray as xr
 from datetime import datetime, timedelta
-
-path_to_data = '/expanse/nfs/cw3e/cwp140/'
+sys.path.append('../modules')
+import globalvars
+path_to_data = globalvars.path_to_data
 path_to_out  = '../out/'       # output files (numerical results, intermediate datafiles) -- read & write
 
 #####################################################
@@ -88,8 +89,10 @@ d = {'dates': combined_dt_array}
 dates = pd.DataFrame(d)
 ## add special date for paper (this is NOT A LANDSLIDE DATE)
 new_row = pd.DataFrame([{'dates': pd.to_datetime('2024-09-23', format='%Y-%m-%d')}])
-dates = pd.concat([dates, new_row], ignore_index=True)
+new_row2 = pd.DataFrame([{'dates': pd.to_datetime('2025-08-08', format='%Y-%m-%d')}])
+dates = pd.concat([dates, new_row, new_row2], ignore_index=True)
 final_dates_lst = dates['dates'].unique()
+
 
 ## create list of init dates we need 
 ## we will run mclimate based on these dates and lead times
@@ -142,6 +145,7 @@ tmp = df.loc[idx]
 
 # Save as CSV
 tmp.to_csv(path_to_out+'GEFS_dates_download.csv', index=False)
+
 
 ##################################################################
 ### CREATE A LIST OF DATES WHEN THERE IS NO REPORTED LANDSLIDE ###

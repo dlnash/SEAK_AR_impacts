@@ -1,7 +1,7 @@
 ######################################################################
 # Filename:    create_job_configs.py
 # Author:      Deanna Nash dnash@ucsd.edu
-# Description: Script to create .yaml configuration file to run job_array with slurm for downloading GEFSv12 Reforecast Data
+# Description: Script to create .yaml configuration file to run job_array with slurm for comparing mclimate to reforecast for high impact dates
 #
 ######################################################################
 
@@ -11,29 +11,30 @@ import numpy as np
 import yaml
 from itertools import chain
 
-## create list of dates to download in parallel
-start_date = pd.to_datetime('1980-01-01')
-end_date = pd.to_datetime('2019-12-31')
+conda_path = "/home/dnash/miniconda3/envs/SEAK-impacts/bin/python"
+## read unique landslide dates from csv
+df = pd.read_csv('../../out/landslide_dates.csv')
+df['init_date'] = pd.to_datetime(df['init_date'], format='%Y%m%d')
 
-## make a list of dates between start_date and end_date
-date_lst = pd.date_range(start_date, end_date, freq='1D')
-			
+# Remove duplicates based on column "init_date"
+df = df.drop_duplicates(subset='init_date')
+
 jobcounter = 0
 filecounter = 0
 ## loop through to create dictionary for each job
 d_lst = []
 dest_lst = []
 njob_lst = []
-for i, date in enumerate(date_lst):
-    yr = date.strftime("%Y")
-    month = date.strftime("%m")
-    day = date.strftime("%d")
-    
+
+for index, row in df.iterrows():
     jobcounter += 1
-    d = {'job_{0}'.format(jobcounter):
-         {'year': yr,
-          'month': month,
-          'day': day
+    
+    init_date = row.init_date.strftime("%Y%m%d")
+    model = row.model_name
+    
+    d = {"job_{0}".format(jobcounter):
+         {"init_date": init_date,
+          "model_name": model
           }}
     d_lst.append(d)
     
@@ -66,7 +67,7 @@ file.close()
 for i, njobs in enumerate(njob_lst):
     call_str_lst = []
     for j, job in enumerate(range(1, njobs+1, 1)):
-        call_string = "python getWRF_batch.py config_{0}.yaml 'job_{1}'".format(i+1, j+1)
+        call_string = "{2} -u compare_mclimate_forecast.py config_{0}.yaml 'job_{1}'".format(i+1, j+1, conda_path)
         call_str_lst.append(call_string)
         
     ## now write those lines to a text file

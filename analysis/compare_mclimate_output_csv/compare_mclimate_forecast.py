@@ -9,9 +9,12 @@ import os, sys
 import yaml
 import pandas as pd
 import numpy as np
+import time
+
+start_time = time.time()  # Record the start time
 
 # import personal modules
-sys.path.append('/home/dnash/repos/mclimate_tool_cw3e')
+sys.path.append('/cw3e/mead/projects/cwp140/repos/mclimate_tool_cw3e/')
 from plot_four_panel_fig import output_compare_mclimate_to_reforecast
 
 config_file = str(sys.argv[1]) # this is the config file name
@@ -28,3 +31,8 @@ print('Running comparison for ...')
 print('... Initialization date: {0}'.format(init_date))
 print('... Model name: {0}'.format(model))
 output_compare_mclimate_to_reforecast(init_date, model, plot=False)
+
+end_time = time.time()  # Record the end time
+elapsed_time = end_time - start_time  # Calculate duration
+
+print(f"Script took {elapsed_time:.2f} seconds to run.")

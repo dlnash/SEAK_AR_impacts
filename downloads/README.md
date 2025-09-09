@@ -23,20 +23,6 @@ sbatch run_download_GEFSv12_reforecast.slurm
 
 ```
 
-4. Download southeast Alaska WRF data from Lader et al., 2020
-
-You will need awscli installed on your machine.
-[https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-welcome.html](https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-welcome.html). 
-
-This workflow utilizes job array via slurm. In `downloads/WRF/`, run:
-
-```
-sbatch run_download_WRF.slurm
-
-## Note: you will need to edit Line 20 to reflect which list of calls you are currently processes. (e.g., to process calls_1.txt, modify the end of Line 20 to read "calls_1.txt"
-
-```
-
-5. Download the Global Ensemble Forecast System data (2017 to present)
+4. Download the Global Ensemble Forecast System data (2017 to present)
 
 Scripts in the`downloads/GEFS/` directory will download the raw .grb forecast files for the chosen date from 2017 to present day. This data can be used to compare the model climate to a forecast date after 2019, which is as far as the reforecast extends.

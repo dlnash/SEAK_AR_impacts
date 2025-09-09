@@ -7,12 +7,13 @@
 ## import libraries
 import os, sys
 import yaml
-import pandas as pd
-import numpy as np
-
+import time
+import subprocess
 # import personal modules
-sys.path.append('/home/dnash/repos/mclimate_tool_cw3e')
+sys.path.append('/cw3e/mead/projects/cwp140/repos/mclimate_tool_cw3e')
 from plot_four_panel_fig import output_compare_mclimate_to_reforecast
+
+start_time = time.time()  # Record the start time
 
 config_file = str(sys.argv[1]) # this is the config file name
 job_info = str(sys.argv[2]) # this is the job name
@@ -23,10 +24,30 @@ ddict = config[job_info] # pull the job info from the dict
 ## pull information from config file
 init_date = ddict['init_date']
 model = ddict['model_name']
-impact_date = ddict['impact_date']
+
+# Example rsync command
+source = "/cw3e/mead/projects/cwp140/data/preprocessed/GEFSv12_reforecast/GEFSv12_slope_aspect.nc"
+destination = "/dev/shm/GEFSv12_slope_aspect_{0}.nc".format(str(init_date))
+
+# rsync command
+command = [
+    "rsync",
+    "-avh",     # archive, verbose, human-readable
+    source,
+    destination
+]
+
+# Run rsync
+subprocess.run(command, check=True)
 
 print('Running comparison for ...')
-print('... Impact date: {0}'.format(impact_date))
 print('... Initialization date: {0}'.format(init_date))
 print('... Model name: {0}'.format(model))
-output_compare_mclimate_to_reforecast(init_date, model, impact_date)
+output_compare_mclimate_to_reforecast(init_date, model, plot=True)
+
+end_time = time.time()  # Record the end time
+elapsed_time = end_time - start_time  # Calculate duration
+
+os.remove(destination)
+
+print(f"Script took {elapsed_time:.2f} seconds to run.")

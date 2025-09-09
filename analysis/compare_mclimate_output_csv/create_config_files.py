@@ -1,27 +1,41 @@
 ######################################################################
 # Filename:    create_job_configs.py
 # Author:      Deanna Nash dnash@ucsd.edu
-# Description: Script to create .yaml configuration file to run job_array with slurm for downloading GEFS Data
+# Description: Script to create .yaml configuration file to run job_array with slurm for comparing mclimate to reforecast for high impact dates
 #
 ######################################################################
 
 ## import libraries
 import pandas as pd
 import numpy as np
-import datetime
 import yaml
 from itertools import chain
 
-## create list of init dates, data_names, and leads to download in parallel
+# ## read unique landslide dates from csv
+# df = pd.read_csv('../../out/landslide_dates.csv')
 
-# init_date_lst = ['20240919']
+dates = pd.date_range(start='2000-01-01', end='2019-12-31')
+
+## now add the dates after 2020 - since we did not want to download and preprocess 4 years of GEFS, we just have the initialization dates needed
 df = pd.read_csv('../../out/GEFS_dates_download.csv')
-init_date_lst = df.init_date.values
-lead_lst = df.F.values
-varname = 'QPF'
-data_name_lst = ['pgrb2']
+df = df.set_index(pd.to_datetime(df['init_date'], format='%Y%m%d'))
+unique_dates2 = df.index.unique()
 
-# lead_lst = np.arange(6, 246, 6)
+combined_dt_array = np.concatenate((dates.values, unique_dates2.values))
+
+# make dataframe
+combined_df = pd.DataFrame({'date': combined_dt_array})
+
+# assign model name based on date
+cutoff = pd.Timestamp('2020-01-01')
+combined_df['model'] = np.where(
+    combined_df['date'] < cutoff,
+    'GEFSv12_reforecast',
+    'GEFS_archive'
+)
+
+# optional: sort by date if needed
+combined_df = combined_df.sort_values('date').reset_index(drop=True)
 
 jobcounter = 0
 filecounter = 0
@@ -29,11 +43,13 @@ filecounter = 0
 d_lst = []
 dest_lst = []
 njob_lst = []
-for i, init_date in enumerate(init_date_lst):
+
+for index, row in combined_df.iterrows():
     jobcounter += 1
+    
     d = {"job_{0}".format(jobcounter):
-         {"init_date": pd.to_datetime(init_date, format="%Y%m%d").strftime("%Y%m%d"),
-          "data_name": 'pgrb2',
+         {"init_date": row.date.strftime("%Y%m%d"),
+          "model_name": row.model
           }}
     d_lst.append(d)
     
@@ -66,7 +82,7 @@ file.close()
 for i, njobs in enumerate(njob_lst):
     call_str_lst = []
     for j, job in enumerate(range(1, njobs+1, 1)):
-        call_string = "python getGFS_batch.py config_{0}.yaml 'job_{1}'".format(i+1, j+1)
+        call_string = "python compare_mclimate_forecast.py config_{0}.yaml 'job_{1}'".format(i+1, j+1)
         call_str_lst.append(call_string)
         
     ## now write those lines to a text file

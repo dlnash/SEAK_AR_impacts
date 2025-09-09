@@ -14,7 +14,7 @@ from itertools import chain
 
 ## create list of init dates, data_names, and leads to download in parallel
 
-init_date_lst = ['20241201']
+init_date_lst = ['20250808']
 # df = pd.read_csv('../../out/GEFS_dates_download.csv')
 # init_date_lst = df.init_date.values
 

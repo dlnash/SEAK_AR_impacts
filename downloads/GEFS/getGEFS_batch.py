@@ -21,5 +21,5 @@ data_name = ddict['data_name']
 ens = ddict['ens']
 
 ## run download_GEFS.sh to download data 
-bash_script = "/home/dnash/repos/SEAK_AR_impacts/downloads/GEFS/download_GEFS.sh"
+bash_script = "/cw3e/mead/projects/cwp140/repos/SEAK_AR_impacts/downloads/GEFS/download_GEFS.sh"
 print(subprocess.run([bash_script, init_date, data_name, ens]))
