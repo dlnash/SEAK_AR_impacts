@@ -10,10 +10,10 @@
 #SBATCH --job-name=compare_mclimate_landslides
 #SBATCH --mail-type=ALL # Type of email notification- BEGIN,END,FAIL,ALL
 #SBATCH --mail-user=dnash@ucsd.edu # Email to which notifications will be sent
-#SBATCH --array=254-546%100 # runs jobs x-y, 100 at a time
+#SBATCH --array=17-37%20 # runs jobs x-y, 100 at a time
 
 # Activate Anaconda work environment
 source /home/dnash/miniconda3/envs/SEAK-impacts/etc/conda/activate.d/*
  
-linevar=`sed $SLURM_ARRAY_TASK_ID'q;d' calls_1.txt`
+linevar=`sed $SLURM_ARRAY_TASK_ID'q;d' calls_website.txt`
 eval $linevar

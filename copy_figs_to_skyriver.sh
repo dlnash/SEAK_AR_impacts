@@ -11,8 +11,8 @@ PATH_TO_MERCED="dnash@skyriver.ucsd.edu:/data/projects/website/mirror/htdocs/Pro
 
 given_dates=(
 "20051122"
-"20201202"
-"20240923"
+# "20201202"
+# "20240923"
 "20150818"
 "20231120"
 )

@@ -10,7 +10,7 @@ import yaml
 import pandas as pd
 import numpy as np
 import time
-
+import subprocess
 start_time = time.time()  # Record the start time
 
 # import personal modules
@@ -26,6 +26,21 @@ ddict = config[job_info] # pull the job info from the dict
 ## pull information from config file
 init_date = ddict['init_date']
 model = ddict['model_name']
+
+# Example rsync command
+source = "/cw3e/mead/projects/cwp140/data/preprocessed/GEFSv12_reforecast/GEFSv12_slope_aspect.nc"
+destination = "/dev/shm/GEFSv12_slope_aspect_{0}.nc".format(str(init_date))
+
+# rsync command
+command = [
+    "rsync",
+    "-avh",     # archive, verbose, human-readable
+    source,
+    destination
+]
+
+# Run rsync
+subprocess.run(command, check=True)
 
 print('Running comparison for ...')
 print('... Initialization date: {0}'.format(init_date))

@@ -13,6 +13,7 @@ from itertools import chain
 
 # ## read unique landslide dates from csv
 # df = pd.read_csv('../../out/landslide_dates.csv')
+conda_path = "/home/dnash/miniconda3/envs/SEAK-impacts/bin/python"
 
 dates = pd.date_range(start='2000-01-01', end='2019-12-31')
 
@@ -82,7 +83,7 @@ file.close()
 for i, njobs in enumerate(njob_lst):
     call_str_lst = []
     for j, job in enumerate(range(1, njobs+1, 1)):
-        call_string = "python compare_mclimate_forecast.py config_{0}.yaml 'job_{1}'".format(i+1, j+1)
+        call_string = "{2} -u compare_mclimate_forecast.py config_{0}.yaml 'job_{1}'".format(i+1, j+1, conda_path)
         call_str_lst.append(call_string)
         
     ## now write those lines to a text file

@@ -87,10 +87,12 @@ print(len(unique_dates3))
 combined_dt_array = np.concatenate((unique_dates2.values, unique_dates3.values))
 d = {'dates': combined_dt_array}
 dates = pd.DataFrame(d)
+## add special date (there was landslide activity on this day)
+new_row = pd.DataFrame([{'dates': pd.to_datetime('2005-11-23', format='%Y-%m-%d')}])
 ## add special date for paper (this is NOT A LANDSLIDE DATE)
-new_row = pd.DataFrame([{'dates': pd.to_datetime('2024-09-23', format='%Y-%m-%d')}])
+new_row1 = pd.DataFrame([{'dates': pd.to_datetime('2024-09-23', format='%Y-%m-%d')}])
 new_row2 = pd.DataFrame([{'dates': pd.to_datetime('2025-08-08', format='%Y-%m-%d')}])
-dates = pd.concat([dates, new_row, new_row2], ignore_index=True)
+dates = pd.concat([dates, new_row, new_row1, new_row2], ignore_index=True)
 final_dates_lst = dates['dates'].unique()
 
 
