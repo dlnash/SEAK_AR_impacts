@@ -43,9 +43,11 @@ gfs_vardict = {
 F_lst = np.arange(6, 168+6, 6)
 for i, F in enumerate(F_lst):
     F = str(F).zfill(3)
+    print(f'Processing Lead {F}...')
     ######################
     ### COMPUTE UV1000 ###
     ######################
+    print(f'....Computing UV1000...')
     ## open all pressure variables needed for IVT calculation
     varname_lst = ['u_wind', 'v_wind']
     ds_lst = []
@@ -67,11 +69,11 @@ for i, F in enumerate(F_lst):
     ###################
     ### COMPUTE IVT ###
     ###################
-    
+    print(f'....Computing IVT...')
     print('Reading pressure level data ....')
     ## open pgrb2a surface pressure data
     fname = path_to_data + 'geavg.t00z.pgrb2a.0p50.f{0}'.format(F)
-    sfc = xr.open_dataset(fname, engine='cfgrib',filter_by_keys=gfs_vardict['sfc_pressure'])
+    sfc = xr.open_dataset(fname, engine='cfgrib',filter_by_keys=gfs_vardict['sfc_pressure'], decode_timedelta=True)
     
     ## open all pressure variables needed for IVT calculation
     varname_lst = ['u_wind', 'v_wind', 'rh', 'temperature']
@@ -117,7 +119,7 @@ for i, F in enumerate(F_lst):
     ##############################
     ### COMPUTE FREEZING LEVEL ###
     ##############################
-    
+    print(f'....Computing Freezing Level...')
     ## extract freezing level data
     freezing_level_ds = gefs.read_GEFS_pgrb2b(F, gfs_vardict['freezing_level'], path_to_data)
     
@@ -130,14 +132,14 @@ for i, F in enumerate(F_lst):
 ###################
 ### COMPUTE QPF ###
 ###################
-
+print(f'....Computing QPF...')
 ## Read QPF data for all time steps
 ds_lst = []
 for i, F in enumerate(np.arange(3, 169, 3)):
     try:
         F = str(F).zfill(3)
         fname = path_to_data + 'geavg.t00z.pgrb2a.0p50.f{0}'.format(F)
-        dsa = xr.open_dataset(fname, engine='cfgrib',filter_by_keys=gfs_vardict['prec'])
+        dsa = xr.open_dataset(fname, engine='cfgrib',filter_by_keys=gfs_vardict['prec'], decode_timedelta=True)
         dsa = dsa.expand_dims(dim='step')
         ds_lst.append(dsa)
     except:

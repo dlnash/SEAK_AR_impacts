@@ -6,3 +6,4 @@ Description: global variables such as path_to_data for all scripts
 
 path_to_data = "/cw3e/mead/projects/cwp140/data/"
 path_to_repo = "/cw3e/mead/projects/cwp140/repos/SEAK_AR_impacts/"
+path_to_conda = "/home/dnash/miniconda3/envs/SEAK-impacts/bin/python"

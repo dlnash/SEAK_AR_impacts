@@ -6,15 +6,20 @@
 ######################################################################
 
 ## import libraries
+import os, sys
 import pandas as pd
 import numpy as np
 import datetime
 import yaml
 from itertools import chain
+# import personal modules
+sys.path.append('../../modules')
+import globalvars
+path_to_conda = globalvars.path_to_conda
 
 ## create list of init dates, data_names, and leads to download in parallel
 
-init_date_lst = ['20250808']
+init_date_lst = ['20250915', '20250919', '20251008']
 # df = pd.read_csv('../../out/GEFS_dates_download.csv')
 # init_date_lst = df.init_date.values
 
@@ -78,7 +83,7 @@ file.close()
 for i, njobs in enumerate(njob_lst):
     call_str_lst = []
     for j, job in enumerate(range(1, njobs+1, 1)):
-        call_string = "python getGEFS_batch.py config_{0}.yaml 'job_{1}'".format(i+1, j+1)
+        call_string = f"{path_to_conda} getGEFS_batch.py config_{i+1}.yaml 'job_{j+1}'"
         call_str_lst.append(call_string)
         
     ## now write those lines to a text file

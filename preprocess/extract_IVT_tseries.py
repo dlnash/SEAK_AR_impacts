@@ -9,12 +9,12 @@ import glob
 import pandas as pd
 import numpy as np
 
-path_to_data = '/expanse/nfs/cw3e/cwp140/'
-fname_pattern = path_to_data + 'preprocessed/ARScale_ERA5/ERA5_ARScale_*.nc'
+path_to_data = '/cw3e/mead/projects/cwp162/data/preprocessed/ARScale_ERA5/'
+fname_pattern = path_to_data + 'ERA5_ARScale_*.nc'
 filenames = sorted(glob.glob(fname_pattern))
-## 56.5N 132.5W
-lat = 56.5
-lon = -132.5
+## 56.5N 132.5W OR 59N 135.5W
+lat = 59.
+lon = -135.5
 df_lst = []
 for i, fname in enumerate(filenames):
     print(fname)

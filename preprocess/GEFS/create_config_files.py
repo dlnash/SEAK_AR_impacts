@@ -13,7 +13,7 @@ from itertools import chain
 
 ## create list of init dates, data_names, and leads to download in parallel
 
-init_date_lst = ['20250808']
+init_date_lst = ['20250915', '20250919', '20251008']
 lead_lst = np.arange(6, 168+1, 6)
 
 # df = pd.read_csv('../../out/GEFS_dates_download.csv')
@@ -65,7 +65,7 @@ file.close()
 for i, njobs in enumerate(njob_lst):
     call_str_lst = []
     for j, job in enumerate(range(1, njobs+1, 1)):
-        call_string = "python preprocess_GEFS.py config_{0}.yaml 'job_{1}'".format(i+1, j+1)
+        call_string = "/home/dnash/miniconda3/envs/SEAK-impacts/bin/python -u preprocess_GEFS.py config_{0}.yaml 'job_{1}'".format(i+1, j+1)
         call_str_lst.append(call_string)
         
     ## now write those lines to a text file

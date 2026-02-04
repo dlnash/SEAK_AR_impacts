@@ -30,7 +30,7 @@ def read_GEFS_pres_grb(F, vardict, path_to_data):
     
     ## open pgrb2a data
     fname = path_to_data + 'geavg.t00z.pgrb2a.0p50.f{0}'.format(F)
-    dsa = xr.open_dataset(fname, engine='cfgrib',filter_by_keys=vardict)
+    dsa = xr.open_dataset(fname, engine='cfgrib',filter_by_keys=vardict, decode_timedelta=True)
     
     ## open pgrb2b data
     ens_lst = ['gec00']
@@ -41,7 +41,7 @@ def read_GEFS_pres_grb(F, vardict, path_to_data):
     ds_lst = []
     for e, ens in enumerate(ens_lst):
         fname = path_to_data + '{0}.t00z.pgrb2b.0p50.f{1}'.format(ens, F)
-        ds = xr.open_dataset(fname, engine='cfgrib',filter_by_keys=vardict)
+        ds = xr.open_dataset(fname, engine='cfgrib',filter_by_keys=vardict, decode_timedelta=True)
         ds_lst.append(ds)
     
     ## concat pgrb2b data along pressure level
@@ -138,7 +138,7 @@ def read_GEFS_pgrb2b(F, vardict, path_to_data):
     ds_lst = []
     for e, ens in enumerate(ens_lst):
         fname = path_to_data + '{0}.t00z.pgrb2b.0p50.f{1}'.format(ens, F)
-        ds = xr.open_dataset(fname, engine='cfgrib',filter_by_keys=vardict)
+        ds = xr.open_dataset(fname, engine='cfgrib',filter_by_keys=vardict, decode_timedelta=True)
         ds_lst.append(ds)
     
     ## concat pgrb2b data along pressure level
