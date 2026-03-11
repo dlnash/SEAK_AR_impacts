@@ -11,7 +11,7 @@
 #SBATCH --job-name=download_GEFS
 #SBATCH --mail-type=ALL # Type of email notification- BEGIN,END,FAIL,ALL
 #SBATCH --mail-user=dnash@ucsd.edu # Email to which notifications will be sent
-#SBATCH --array=2-96%95 # runs jobs x-y, 100 at a time
+#SBATCH --array=2-544%100 # runs jobs x-y, 100 at a time
 
 linevar=`sed $SLURM_ARRAY_TASK_ID'q;d' calls_1.txt`
 eval $linevar

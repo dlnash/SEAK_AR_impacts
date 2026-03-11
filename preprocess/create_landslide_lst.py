@@ -113,13 +113,13 @@ df['dt_max_utc'] = (
 # Subset to analysis window
 idx = (df['dt_min_utc'] <= '2024-12-31') & (df['dt_max_utc'] >= '2000-01-01')
 df = df.loc[idx]
-print(len(df))
+print('Total number of landslides from the USGS dataset', len(df))
 print(df[['Day_min', 'Time_min', 'dt_min_local', 'dt_min_utc']].head())
 print(df[['Day_max', 'Time_max', 'dt_max_local', 'dt_max_utc']].head())
 
 # Expand to daily dates
 unique_dates2 = expand_date_ranges(df, 'dt_min_utc', 'dt_max_utc')
-print(len(unique_dates2))
+print('Unique number of landslide dates from the USGS dataset', len(unique_dates2))
 
 ###################################################
 ### LANDSLIDE DATES FROM NOAA STORM EVENTS DATA ###
@@ -179,7 +179,7 @@ df['dt_max_utc'] = df.apply(local_to_utc, axis=1, col='END_DATE_TIME')
 idx = (df['dt_min_utc'] <= '2024-12-31') & (df['dt_max_utc'] >= '2000-01-01')
 df = df.loc[idx]
 
-print(len(df))
+print('Total number of landslides from the NOAA dataset', len(df))
 
 print(df[['BEGIN_DATE_TIME', 'dt_min_utc', 'CZ_TIMEZONE']].head())
 
@@ -188,7 +188,7 @@ assert df['dt_min_utc'].dt.year.max() <= 2026
 
 # Expand to daily dates
 unique_dates3 = expand_date_ranges(df, 'dt_min_utc', 'dt_max_utc')
-print(len(unique_dates3))
+print('Unique number of landslide dates from the NOAA dataset', len(unique_dates3))
 
 combined_dates = pd.DatetimeIndex(
     np.unique(np.concatenate([unique_dates2.values, unique_dates3.values]))
@@ -211,7 +211,7 @@ final_dates_lst = (
 )
 
 
-print(len(final_dates_lst))
+print('Total Unique number of landslide dates from both NOAA and USGS datasets', len(final_dates_lst))
 
 
 
@@ -275,7 +275,7 @@ df_dates = df_dates.loc[df_dates.AR_present == 1]
 final_dates_lst = pd.to_datetime(df_dates.date.values)
 
 print(final_dates_lst)
-print(len(final_dates_lst))
+print('Total Unique number of landslide dates from both NOAA and USGS datasets associated with an AR', len(final_dates_lst))
 
 ## create list of init dates we need 
 ## we will run mclimate based on these dates and lead times

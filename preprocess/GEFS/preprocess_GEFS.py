@@ -40,7 +40,7 @@ gfs_vardict = {
 "prec":{'name': 'Total Precipitation', 'typeOfLevel': 'surface', 'level': 0, 'paramId': 228228, 'shortName': 'tp'} #total precipitation
 
 }
-F_lst = np.arange(6, 168+6, 6)
+F_lst = np.arange(0, 168+6, 6)
 for i, F in enumerate(F_lst):
     F = str(F).zfill(3)
     print(f'Processing Lead {F}...')
@@ -56,7 +56,7 @@ for i, F in enumerate(F_lst):
         ds_lst.append(ds)
     
     ## merge variable datasets into single dataset
-    ds = xr.merge(ds_lst)
+    ds = xr.merge(ds_lst, compat='no_conflicts')
     
     ## select the 1000 hPa level
     ds = ds.sel(isobaricInhPa=1000)
@@ -83,7 +83,7 @@ for i, F in enumerate(F_lst):
         ds_lst.append(ds)
     
     ## merge variable datasets into single dataset
-    ds = xr.merge(ds_lst)
+    ds = xr.merge(ds_lst, compat='no_conflicts')
     
     ## Compute specific humidity from relative humidity and temperature
     print('Computing specific humidity ....')

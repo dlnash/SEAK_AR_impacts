@@ -7,13 +7,11 @@
 #SBATCH -t 5:00:00 # Runtime in HH:MM:SS
 #SBATCH -o slurm_out/output_%a # File to which STDOUT will be written
 #SBATCH -e slurm_out/output_err%a # File to which STDERR will be written
-#SBATCH --job-name=calc_mclimate
+#SBATCH --job-name=concat_mclimate_lead_time
 #SBATCH --mail-type=ALL # Type of email notification- BEGIN,END,FAIL,ALL
 #SBATCH --mail-user=dnash@ucsd.edu # Email to which notifications will be sent
-#SBATCH --array=1-370%25 # runs jobs x-y, 100 at a time
+#SBATCH --array=2-9 # runs jobs x-y
 
-# Activate Anaconda work environment
-source /home/dnash/miniconda3/envs/SEAK-impacts/etc/conda/activate.d/*
- 
-linevar=`sed $SLURM_ARRAY_TASK_ID'q;d' calls_1.txt`
-eval $linevar
+PYTHON=/home/dnash/miniconda3/envs/SEAK-impacts/bin/python
+
+$PYTHON concat_mclimate.py $SLURM_ARRAY_TASK_ID

@@ -18,7 +18,7 @@ from datetime import timedelta
 import shutil
 
 dask.config.set(**{'array.slicing.split_large_chunks': True})
-path_to_data = '/expanse/nfs/cw3e/cwp140/'     # project data -- read only
+path_to_data = '/cw3e/mead/projects/cwp140/data/'     # project data -- read only
 
 config_file = str(sys.argv[1]) # this is the config file name
 job_info = str(sys.argv[2]) # this is the job name
@@ -29,6 +29,7 @@ ddict = config[job_info] # pull the job info from the dict
 F = int(ddict['F'])
 mon = int(ddict['month'])
 day = int(ddict['day'])
+varname = 'prec' ## ivt, uv1000, 'freezing_level' or 'prec'
 
 def get_filename_GEFSv12_reforecast(F):
     ## this is the number of hours of lead time
@@ -72,10 +73,9 @@ print(start_date, end_date)
 ## load all days from the new subset
 ## create list of fnames
 fname_lst = []
-varname = 'prec' ## ivt, uv1000, 'freezing_level' or 'prec'
 
-scratch_path = '/expanse/lustre/scratch/dnash/temp_project/mclimate/{0}/'.format(varname)
-# scratch_path = path_to_data + 'preprocessed/GEFSv12_reforecast/{0}/'.format(varname)
+
+scratch_path = path_to_data + 'preprocessed/GEFSv12_reforecast/{0}/'.format(varname)
 
 ## append filenames to a list
 print('Gathering filenames ...')

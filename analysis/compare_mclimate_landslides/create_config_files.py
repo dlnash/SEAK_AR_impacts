@@ -16,6 +16,20 @@ conda_path = "/home/dnash/miniconda3/envs/SEAK-impacts/bin/python"
 df = pd.read_csv('../../out/landslide_dates.csv')
 df['init_date'] = pd.to_datetime(df['init_date'], format='%Y%m%d')
 
+# convert impact_date to datetime
+df['impact_date'] = pd.to_datetime(df['impact_date'], format='%Y%m%d')
+
+# convert website list to datetime
+website_date_lst = pd.to_datetime(
+    ['20051122', '20150818', '20201202', '20231121', '20240923'],
+    format='%Y%m%d'
+)
+
+# subset
+df = df[df['impact_date'].isin(website_date_lst)]
+
+print(df)
+
 # Remove duplicates based on column "init_date"
 df = df.drop_duplicates(subset='init_date')
 

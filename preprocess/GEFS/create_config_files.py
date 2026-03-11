@@ -10,15 +10,37 @@ import pandas as pd
 import numpy as np
 import yaml
 from itertools import chain
+from pathlib import Path
 
 ## create list of init dates, data_names, and leads to download in parallel
 
 init_date_lst = ['20250915', '20250919', '20251008']
-lead_lst = np.arange(6, 168+1, 6)
 
-# df = pd.read_csv('../../out/GEFS_dates_download.csv')
-# init_date_lst = df.init_date.values
-# lead_lst = df.F.values
+df = pd.read_csv('../../out/GEFS_dates_download.csv')
+requested_dates = (
+    pd.to_datetime(df.init_date, format="%Y%m%d")
+    .dt.normalize()
+    .unique()
+)
+
+# Get dates you already have on disk
+path_to_preprocessed_GEFS = Path(
+    '/cw3e/mead/projects/cwp140/data/preprocessed/GEFS/qpf/'
+)
+
+existing_dates = {
+    pd.to_datetime(f.name[:8], format="%Y%m%d")
+    for f in path_to_preprocessed_GEFS.glob("*.qpf")
+}
+
+# Find dates you still need to download
+dates_to_download = sorted(
+    d for d in requested_dates if d not in existing_dates
+)
+
+print(f"Requested dates: {len(requested_dates)}")
+print(f"Existing dates:  {len(existing_dates)}")
+print(f"To download:    {len(dates_to_download)}")
 
 jobcounter = 0
 filecounter = 0
@@ -26,13 +48,10 @@ filecounter = 0
 d_lst = []
 dest_lst = []
 njob_lst = []
-for i, init_date in enumerate(init_date_lst):  
-    for j, lead in enumerate(lead_lst):
-# for i, (init_date, lead) in enumerate(zip(init_date_lst, lead_lst)):
+for date in dates_to_download:
         jobcounter += 1
         d = {"job_{0}".format(jobcounter):
-             {"init_date": pd.to_datetime(init_date, format="%Y%m%d").strftime("%Y%m%d"),
-              "F": "{0}".format(str(lead).zfill(3))
+             {"init_date": date.strftime("%Y%m%d"),
               }}
         d_lst.append(d)
         

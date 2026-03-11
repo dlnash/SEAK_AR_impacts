@@ -12,8 +12,8 @@ import pandas as pd
 
 def calc_prec_rate(ds):
     ## convert precipitation to mm per hour
-    ts_3hr = pd.timedelta_range(start='0 day', periods=57, freq='3H')
-    ts_6hr = pd.timedelta_range(start='0 day', periods=29, freq='6H')
+    ts_3hr = pd.timedelta_range(start='0 day', periods=57, freq='3h')
+    ts_6hr = pd.timedelta_range(start='0 day', periods=29, freq='6h')
     tp = ds.tp ## pull out tp
     prec_3hr = tp.sel(step=ts_3hr[1::2]) ## grab only the 3hr values
     tp2 = tp.diff(dim='step') ## calculate difference in precip
@@ -124,7 +124,7 @@ def calc_IVT_manual(ds):
     ivt = np.sqrt(qu**2 + qv**2)
     ivt.name = 'ivt'
 
-    ds = xr.merge([qu, qv, ivt])
+    ds = xr.merge([qu, qv, ivt], compat='no_conflicts')
     
     return ds
 

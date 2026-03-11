@@ -85,6 +85,7 @@ df.to_csv(path_to_out+'landslide_box-whisker.csv', index=False) # Save as CSV
 #######################################
 ## read non-landslide dates
 df = pd.read_csv('../out/non-landslide_dates.csv')
+
 df = df.set_index(pd.to_datetime(df['init_date'], format='%Y-%m-%d'))
 final_dates_lst = df.index
 
