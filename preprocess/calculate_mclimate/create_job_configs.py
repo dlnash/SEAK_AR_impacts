@@ -6,17 +6,21 @@
 ######################################################################
 
 ## import libraries
+import os, sys
 import pandas as pd
 from datetime import timedelta
 import numpy as np
 import yaml
 from itertools import chain
+from pathlib import Path
+# import personal modules
+sys.path.append('../../modules')
+import globalvars
+path_to_conda = globalvars.path_to_conda
 
-dates = pd.date_range('2023-01-01', '2023-12-31', freq='1D') ## final dates for MClimate
-
-month_lst = dates.strftime("%m") # month array
-day_lst = dates.strftime("%d") # day array
-F_lst = np.arange(6, 243, 6) # forecast lead list
+var_lst = ['ivt', 'qpf', 'freezing_level', 'uv1000']
+doy_block_lst = np.arange(0, 37, 1)
+lt_block_lst = np.arange(0, 10, 1)
 
 jobcounter = 0
 filecounter = 0
@@ -24,30 +28,31 @@ filecounter = 0
 d_lst = []
 dest_lst = []
 njob_lst = []
-for i, (mon, day) in enumerate(zip(month_lst, day_lst)):
-    for j, F in enumerate(F_lst):
-        jobcounter += 1
-
-        d = {'job_{0}'.format(jobcounter):
-             {'month': mon,
-              'day': day,
-              'F': str(F)
-              }}
-        d_lst.append(d)
-        
-        if (jobcounter == 999):
-            filecounter += 1
-            ## merge all the dictionaries to one
-            dest = dict(chain.from_iterable(map(dict.items, d_lst)))
-            njob_lst.append(len(d_lst))
-            ## write to .yaml file and close
-            file=open("config_{0}.yaml".format(str(filecounter)),"w")
-            yaml.dump(dest,file, allow_unicode=True, default_flow_style=None)
-            file.close()
+for varname in var_lst:
+    for lt_block in lt_block_lst:
+        for doy_block in doy_block_lst:        
+            jobcounter += 1
+    
+            d = {'job_{0}'.format(jobcounter):
+                 {'varname': varname,
+                  'lt_block_id': int(lt_block),
+                  'doy_block_id': int(doy_block)
+                  }}
+            d_lst.append(d)
             
-            ## reset jobcounter and d_lst
-            jobcounter = 0
-            d_lst = []
+            if (jobcounter == 999):
+                filecounter += 1
+                ## merge all the dictionaries to one
+                dest = dict(chain.from_iterable(map(dict.items, d_lst)))
+                njob_lst.append(len(d_lst))
+                ## write to .yaml file and close
+                file=open("config_{0}.yaml".format(str(filecounter)),"w")
+                yaml.dump(dest,file, allow_unicode=True, default_flow_style=None)
+                file.close()
+                
+                ## reset jobcounter and d_lst
+                jobcounter = 0
+                d_lst = []
         
 ## now save the final config
 filecounter += 1
@@ -55,16 +60,15 @@ filecounter += 1
 dest = dict(chain.from_iterable(map(dict.items, d_lst)))
 njob_lst.append(len(d_lst))
 ## write to .yaml file and close
-file=open("config_{0}.yaml".format(str(filecounter)),"w")
+file=open(f"config_{str(filecounter)}.yaml","w")
 yaml.dump(dest,file, allow_unicode=True, default_flow_style=None)
 file.close()
 
 ## create calls.txt for config_1(-8)
-
 for i, njobs in enumerate(njob_lst):
     call_str_lst = []
     for j, job in enumerate(range(1, njobs+1, 1)):
-        call_string = "python calc_mclimate.py config_{0}.yaml 'job_{1}'".format(i+1, j+1)
+        call_string = f"{path_to_conda} calculate_mclimate.py config_{i+1}.yaml 'job_{j+1}'"
         call_str_lst.append(call_string)
         
     ## now write those lines to a text file

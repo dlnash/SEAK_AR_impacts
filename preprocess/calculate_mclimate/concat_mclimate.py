@@ -11,34 +11,32 @@ import glob
 import gc
 import yaml
 from datetime import datetime
-from config import DOY_BLOCKS, LEAD_TIME_BLOCKS
-
-path_to_data = '/cw3e/mead/projects/cwp140/data/'     # project data
+from config import DOY_BLOCKS
 
 # ---------------------------------------------------------------------
 # Main Script
 # ---------------------------------------------------------------------
 startTime = datetime.now()
-
-path = "/cw3e/mead/projects/cwp140/data/preprocessed/mclimate_2.0/ivt"
+varname = 'ivt'
+path = f"/cw3e/mead/projects/cwp140/data/preprocessed/mclimate_2.0/{varname}"
 
 # -------------------------------
 # Lead time block passed by slurm
 # -------------------------------
-lt_block_id = int(sys.argv[1])
-lt = LEAD_TIME_BLOCKS[lt_block_id]["name"]
+doy_block_id = int(sys.argv[1])
+doy = DOY_BLOCKS[doy_block_id]["name"]
 
-print(f"\nConcatenating {lt}")
+print(f"\nConcatenating {doy}")
 
 
 files = sorted(glob.glob(
-    os.path.join(path, f"mclimate_ivt_{lt}_DOY_*.nc")
+    os.path.join(path, f"mclimate_{varname}_LT_*_{doy}.nc")
 ))
 
 print(f"  {len(files)} files")
 
 datasets = [xr.open_dataset(f) for f in files]
-ds = xr.concat(datasets, dim="doy")
+ds = xr.concat(datasets, dim="lead_time")
 
 ds = ds.chunk({
     "doy": 20,
@@ -51,11 +49,11 @@ ds = ds.chunk({
 ds = ds.transpose("doy", "lead_time", "quantile", "latitude", "longitude")
 print(ds)
 
-out_name = os.path.join( path, f"concat_LT/mclimate_ivt_{lt}.nc" ) 
+out_name = os.path.join(path, f"concat_DOY/mclimate_{varname}_{doy}.nc" ) 
 tmp = out_name + ".tmp"
 
 encoding = {
-    "ivt_percentiles": {
+    f"{varname}_percentiles": {
         "zlib": True,
         "complevel": 4,
         "dtype": "float32"

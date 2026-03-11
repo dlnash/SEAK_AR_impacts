@@ -16,7 +16,7 @@ def init_to_file(t):
     return (
         f"{path_to_data}preprocessed/GEFSv12_reforecast/"
         f"{varname}_final/"
-        f"GEFSv12_reforecast_IVT_{t:%Y%m%d}.nc"
+        f"GEFSv12_reforecast_{varname}_{t:%Y%m%d}.nc"
     )
     
 def doy_range_with_padding(doy_min, doy_max, window, year_length=365):
@@ -48,7 +48,8 @@ def circular_doy_distance(doy, target_doy, year_length=365):
     return xr.where(diff <= year_length / 2, diff, year_length - diff)
 
 def preprocess(ds):
-    ds = ds.drop_vars(["ivtu", "ivtv"], errors="ignore")
+    if varname == 'ivt':
+        ds = ds.drop_vars(["ivtu", "ivtv"], errors="ignore")
     
     # Convert step to timedelta64[ns] safely
     ds["step"] = ds["step"].astype("timedelta64[ns]")
@@ -223,46 +224,6 @@ pct_all = xr.concat(
     dim="lead_time",
     join="exact"
 )
-# pct_list = []
-
-# for lt in lt_cfg["lead_times"]:
-#     print(f"Processing lead time {lt} h...")
-#     print("Elapsed:", datetime.now() - startTime)
-#     # Select single lead time
-#     ds_lt = ds.sel(step=np.timedelta64(lt, "h"))
-    
-#     # 1D day-of-year for this lead time
-#     doy_1d = ds_lt.valid_time.dt.dayofyear
-    
-#     # Loop over DOYs in the block
-#     for target_doy in range(doy_cfg["doy_min"], doy_cfg["doy_max"] + 1):
-#         mask = circular_doy_distance(doy_1d, target_doy) <= window
-#         samples = ds_lt[varname].where(mask, drop=True)
-
-#         if samples.sizes.get("time", 0) == 0:
-#             continue
-
-#         # Compute quantiles
-#         pct = samples.quantile(
-#             q=quantile_arr,
-#             dim=("time", "number"),
-#         ).astype("float32")
-
-#         # Assign coords for DOY and lead_time
-#         pct = pct.expand_dims(doy=[target_doy], lead_time=[lt])
-#         pct_list.append(pct)
-        
-
-# Concatenate once along lead_time and doy
-# print('PRINTING HERE FOR DEBUG')
-# print(pct_list[0])
-# pct_all = xr.concat(
-#     pct_list,
-#     dim="lead_time",
-#     join="outer"
-# )
-
-# del pct_list
 
 pct_all = pct_all.rename(f"{varname}_percentiles")
 
@@ -304,7 +265,6 @@ def encoding_da(da, zlib=True, complevel=5):
             "dtype": "float32",
         }
     }
-
 
 tmp_name = out_name + ".tmp"
 
