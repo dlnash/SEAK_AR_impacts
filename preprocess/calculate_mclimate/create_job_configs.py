@@ -18,7 +18,7 @@ sys.path.append('../../modules')
 import globalvars
 path_to_conda = globalvars.path_to_conda
 
-var_lst = ['ivt', 'qpf', 'freezing_level', 'uv1000']
+var_lst = ['ivt', 'qpf', 'freezing_level', 'uv']
 doy_block_lst = np.arange(0, 37, 1)
 lt_block_lst = np.arange(0, 10, 1)
 

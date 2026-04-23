@@ -125,6 +125,9 @@ print("Elapsed:", datetime.now() - startTime)
 # Inside each job, use xarray + dask to compute model climates for all days.
 print("Reading data...")
 
+test = xr.open_dataset(files[1])
+print(test)
+
 # open_mfdataset(...) for all years
 ds = xr.open_mfdataset(
     files,
@@ -136,7 +139,8 @@ ds = xr.open_mfdataset(
     coords="minimal",
     compat="override",
     parallel=False,
-    decode_cf=True,   # Let xarray handle 'time' and 'step'
+    decode_cf=True,   # Let xarray handle 'time' and 'step',
+    decode_timedelta=True
 )
 
 # print(ds.time.values)

@@ -10,7 +10,7 @@
 #SBATCH --job-name=calc_mclimate
 #SBATCH --mail-type=ALL # Type of email notification- BEGIN,END,FAIL,ALL
 #SBATCH --mail-user=dnash@ucsd.edu # Email to which notifications will be sent
-#SBATCH --array=1-370%25 # runs jobs x-y, 100 at a time
+#SBATCH --array=741-999%25 # runs jobs x-y, 100 at a time
 
 # Activate Anaconda work environment
 source /home/dnash/miniconda3/envs/SEAK-impacts/etc/conda/activate.d/*
