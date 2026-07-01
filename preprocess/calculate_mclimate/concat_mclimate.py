@@ -17,7 +17,7 @@ from config import DOY_BLOCKS
 # Main Script
 # ---------------------------------------------------------------------
 startTime = datetime.now()
-varname = 'ivt'
+varname = 'qpf'
 path = f"/cw3e/mead/projects/cwp140/data/preprocessed/mclimate_2.0/{varname}"
 
 # -------------------------------

@@ -30,7 +30,7 @@ requested_dates = (
 
 # Get dates you already have on disk
 path_to_preprocessed_GEFS = Path(
-    '/cw3e/mead/projects/cwp140/data/preprocessed/GEFS/qpf/'
+    '/cw3e/mead/projects/cwp140/data/preprocessed/GEFS/'
 )
 
 existing_dates = {
@@ -48,10 +48,7 @@ print(f"Existing dates:  {len(existing_dates)}")
 print(f"To download:    {len(dates_to_download)}")
 
 varname = 'ivt'
-if varname == 'QPF':
-    data_name_lst = ['pgrb2a']
-else:
-    data_name_lst = ['pgrb2a', 'pgrb2b']
+data_name_lst = ['pgrb2a', 'pgrb2b']
 # lead_lst = np.arange(6, 246, 6)
 
 jobcounter = 0
